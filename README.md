@@ -8,3 +8,5 @@ Collaborators:
 Hongyu Mu, Department of Statistics, 2nd year Master
 
 Carlos Pineda-Antunez, School of Pharmacy, 3rd year PhD
+
+Tina Zhao, Department of Psychology, 2nd year PhD
