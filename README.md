@@ -12,3 +12,6 @@ Carlos Pineda-Antunez, School of Pharmacy, 3rd year PhD
 Tina Zhao, Department of Psychology, 2nd year PhD
 
 Kenny Yi, BIME, 2nd year Master
+
+Nilearn 
+https://nilearn.github.io/stable/index.html
