@@ -8,3 +8,5 @@ Collaborators:
 Hongyu Mu, Department of Statistics, 2nd year Master
 
 Carlos Pineda-Antunez, School of Pharmacy, 3rd year PhD
+
+Kenny Yi, BIME, 2nd year Master
