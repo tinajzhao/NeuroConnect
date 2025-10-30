@@ -1,0 +1,1 @@
+Toby is a non-technical who believes he suffers from some type of post Coronavirus brain cell damage. He wants to visualize areas that might be signals of malfunction comparing to normal brain images.
