@@ -22,3 +22,6 @@ Taylor (technical)
 
 Jordan
 * Jordan is a cognitive neuroscience PhD student writing their literature review on aging and cognition. They want to explore publicly available DTI data to better understand connectivity patterns reported in papers. Jordan has basic Python skills but finds existing neuroimaging software overwhelming and poorly documented.
+
+Casey
+* Casey is a data scientist collaborating with a neurology research group. They want to test multple glass brain models to identify which best highlights differences between patients and controls. Casey has strong coding skills but limited neuroscience background.
