@@ -1,0 +1,18 @@
+1: NetPlotBrain Technical Review
+NetPlotBrain is a Python package designed for static, 3D visualization of brain networks. It is built on Matplotlib, NumPy, pandas, and nibabel, and integrates with TemplateFlow to ensure anatomically precise plots using curated MRI templates.
+
+The core of the package is the netplotbrain.plot() function. It requires three primary inputs:
+1. A template: The anatomical brain background, specified as a NIfTI file or TemplateFlow reference.
+2. Nodes: Brain regions defined by coordinates or atlas-based labels in a pandas DataFrame.
+3. Edges: A connectivity matrix representing the network structure.
+
+The function maps data columns from the input DataFrames to visual properties like node size and edge color, similar to the Seaborn API. It outputs high-resolution, static image files like PNG or SVG. Its primary use is in reproducible analysis pipelines for visualizing statistically significant network differences between groups, such as in comparative studies of healthy and patient populations.
+
+2: Shiny Technical Review & Comparison
+Shiny is an R-based framework for building interactive web applications, not a dedicated neuroscience tool. Its technical function is to create dynamic dashboards that allow users to manipulate data visualizations in real time using UI elements like sliders, buttons, and dropdowns.
+
+Contrasting it with NetPlotBrain:
+1. Output: Shiny produces interactive web interfaces, whereas NetPlotBrain generates static image files.
+2. Specialization: Shiny is a general-purpose dashboarding tool. NetPlotBrain is specialized for neuroimaging, with built-in support for anatomical templates and coordinate systems.
+
+For visualizing brain data, Shiny lacks NetPlotBrain's native anatomical accuracy and neuroimaging data handling. A practical workflow would involve using a Python script with NetPlotBrain to generate the necessary static brain plots, which can then be embedded into a Shiny or Streamlit web application to add an interactive layer for data presentation and exploration.
