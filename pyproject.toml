@@ -1,28 +1,23 @@
 [build-system]
-requires = [
-	“hatching>=1.27.0”
-]
-build-backend = “hatching.build”
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
 
 [project]
-name = “NeuroConnect”
-version = “0.0.0”
-description = “”
-readme = “README.md”
-license = { file = “LICENSE” }
-authors = "Tina Zhao"
+name = "neuroconnect"
+version = "0.0.0"
+description = "Visualization tool for structural brain connectivity, intended for Alzheimer's research"
+readme = "README.md"
+authors = [{name = "Tina Zhao"}]
 classifiers = [
-	‘Intended Audience :: Science/Research’
-	“Programming Language :: Python :: 3”
+	"Intended Audience :: Science/Research",
+	"Programming Language :: Python :: 3",
 ]
-
-requires-python = “>=3.12”
-
-dependencies = [  # packages users need to install with the package
-	“Pandas >=2.3.0”, “Numpy”
+requires-python = ">=3.12"
+dependencies = [
+	"pandas>=2.3.0",
+	"numpy",
 ]
-
 
 [project.urls]
-Homepage = “https://github.com/tinajzhao/NeuroConnect”
-Issues = “https://github.com/tinajzhao/NeuroConnect/issues”
+Homepage = "https://github.com/tinajzhao/NeuroConnect"
+Issues = "https://github.com/tinajzhao/NeuroConnect/issues"
