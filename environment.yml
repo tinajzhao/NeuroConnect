@@ -1,0 +1,14 @@
+name: neuroconnect
+channels:
+  - conda-forge
+dependencies:
+  - numpy
+  - pytest
+  - pytest-cov
+  - pandas
+  - shiny
+  - shinywidgets
+  - plotly
+  - nibabel
+  - templateflow
+  - scikit-image
