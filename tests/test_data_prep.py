@@ -1,0 +1,138 @@
+import pytest
+import pandas as pd
+import numpy as np
+import os
+from src.NeuroConnect.module1 import load_data, clean_data, compute_summary_statistics, format_output
+
+# Fixtures for data setup
+@pytest.fixture
+def mock_data_folder(tmp_path):
+    d = tmp_path / "data"
+    d.mkdir()
+    
+    # Diagnosis CSV creation
+    diag_data = {
+        'LONIUID': ['100', '101', '102', '103', '104'],
+        'Group': ['AD', 'CN', 'AD', 'MCI', 'CN'], # MCI should be filtered out
+        'EXAMDATE': ['2023-01-01'] * 5
+    }
+    pd.DataFrame(diag_data).to_csv(d / "diagnosis.csv", index=False)
+    
+    # DTI CSV creation
+    dti_data = {
+        'LONIUID': ['100', '101', '102', '103', '105'], # 105 has no diagnosis
+        'Tract1': [0.5, 0.6, 0.55, 0.7, 0.9],
+        'Tract2': [0.1, 0.2, 0.15, 0.3, 0.4]
+    }
+    pd.DataFrame(dti_data).to_csv(d / "DTI.csv", index=False)
+    return str(d)
+
+# Smoke Test
+def test_full_pipeline_smoke(mock_data_folder):
+    """
+    Smoke Test: Verifies that the full pipeline runs from loading to formatting without errors.
+    """
+    # Load
+    diag, dti = load_data(mock_data_folder)
+    assert not diag.empty
+    assert not dti.empty
+    
+    # Clean
+    cleaned = clean_data(diag, dti)
+    # Expecting IDs 100 (AD), 101 (CN), 102 (AD). 
+    # 103 is MCI (filtered out), 104 is in diag but not DTI, 105 in DTI but not diag.
+    assert not cleaned.empty
+    assert len(cleaned) == 3 
+    assert 'MCI' not in cleaned['Group'].values
+    
+    # Statistics
+    summary = compute_summary_statistics(cleaned)
+    assert not summary.empty
+    assert 'Group' in summary.columns
+    assert len(summary) == 2 # AD and CN
+    
+    # Output
+    output = format_output(summary)
+    assert isinstance(output, list)
+    assert len(output) == 2
+    assert 'Group' in output[0]
+
+# One-Shot Test
+def test_compute_summary_statistics_one_shot():
+    """
+    Validates that compute_summary_statistics produces the exact expected mean values
+    """
+    input_df = pd.DataFrame({
+        'LONIUID': ['1', '2', '3', '4'],
+        'Group': ['AD', 'AD', 'CN', 'CN'],
+        'TractA': [1.0, 2.0, 3.0, 4.0], # Mean AD=1.5, CN=3.5
+        'TractB': [10.0, 20.0, 30.0, 40.0], # Mean AD=15.0, CN=35.0
+        'Metadata': ['x', 'y', 'z', 'w'] # Should be ignored
+    })
+    
+    result = compute_summary_statistics(input_df)
+    
+    # Check AD values
+    ad_row = result[result['Group'] == 'AD'].iloc[0]
+    assert ad_row['TractA'] == 1.5
+    assert ad_row['TractB'] == 15.0
+    
+    # Check CN values
+    cn_row = result[result['Group'] == 'CN'].iloc[0]
+    assert cn_row['TractA'] == 3.5
+    assert cn_row['TractB'] == 35.0
+
+# 3. Edge Test
+def test_load_data_missing_files_edge(tmp_path):
+    """
+    Edge Test: Checks behavior when required files are missing from the data folder.
+    """
+    empty_folder = tmp_path / "empty"
+    empty_folder.mkdir()
+    
+    # Should raise FileNotFoundError if diagnosis.csv or DTI.csv is missing
+    with pytest.raises(FileNotFoundError):
+        load_data(str(empty_folder))
+
+def test_clean_data_no_matches_edge():
+    """
+    Edge Test: Checks behavior when merge results in empty dataframe (no matching IDs).
+    """
+    diag = pd.DataFrame({'LONIUID': ['1'], 'Group': ['AD']})
+    dti = pd.DataFrame({'LONIUID': ['2'], 'Tract1': [0.5]})
+    
+    cleaned = clean_data(diag, dti)
+    assert cleaned.empty
+    
+    summary = compute_summary_statistics(cleaned)
+    assert summary.empty
+    
+    output = format_output(summary)
+    assert output == []
+
+# Pattern Test
+def test_summary_stats_pattern_invariance():
+    """
+    Verifies the mathematical property that duplicating the dataset should not change the mean values.
+    """
+    # Create random synthetic data
+    np.random.seed(42)
+    df = pd.DataFrame({
+        'LONIUID': [str(i) for i in range(10)],
+        'Group': ['AD']*5 + ['CN']*5,
+        'TractX': np.random.rand(10),
+        'TractY': np.random.rand(10) * 100
+    })
+    
+    # Double the data by concatenating it with itself
+    df_doubled = pd.concat([df, df], ignore_index=True)
+    
+    stats_original = compute_summary_statistics(df)
+    stats_doubled = compute_summary_statistics(df_doubled)
+    
+    # Sort by group to ensure alignment for comparison
+    stats_original = stats_original.sort_values('Group').reset_index(drop=True)
+    stats_doubled = stats_doubled.sort_values('Group').reset_index(drop=True)
+    
+    # Check if dataframes are equal (within float tolerance)
+    pd.testing.assert_frame_equal(stats_original, stats_doubled)
