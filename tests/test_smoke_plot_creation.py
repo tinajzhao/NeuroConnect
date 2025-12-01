@@ -3,9 +3,15 @@ import plotly.graph_objects as go
 import numpy as np
 import pandas as pd
 
-import neuroconnect_app as appmod  # check that app module imports correctly
+import neuroconnect_app as appmod  # hypothetical module name
 
 def test_smoke_minimal_figure_builds():
+    """
+    author: Carlos Pineda
+    reviewer: Tina
+    category: smoke test
+    description: Smoke test to ensure minimal figure components build without error
+    """
     # Surface traces (should return two Mesh3d traces)
     surface_traces = appmod.make_ellipsoid_traces(opacity=0.15)
     assert isinstance(surface_traces, list) and len(surface_traces) >= 2
