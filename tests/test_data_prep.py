@@ -165,8 +165,8 @@ def test_calc_group_diff_oneshot():
     test = pd.DataFrame({
         "PTID": [1, 2, 3, 4, 5, 6],
         "diagnosis": ["AD", "AD", "AD", "CN", "CN", "CN"],
-        "feature1": [10, 12, 14, 20, 22, 24],  # CN mean: 22, AD mean: 12, Diff: 10
-        "feature2": [5, 7, 9, 15, 17, 19],     # CN mean: 17, AD mean: 7, Diff: 10
+        "feature1": [20, 22, 24, 10, 12, 14],  # AD mean: 22, CN mean: 12, AD-CN: 10
+        "feature2": [15, 17, 19, 5, 7, 9],     # AD mean: 17, CN mean: 7, AD-CN: 10
     })
     
     expected = np.array([10.0, 10.0])
