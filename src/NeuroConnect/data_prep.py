@@ -42,6 +42,23 @@ def clean_data(diagnosis_df, dti_df):
     
     return merged_df
 
+def clean_data(dti_df, diagnosis_df, metric_filter): 
+    merged_df = dti_df.merge(diagnosis_df, how="left", left_on="PTID", right_on="subject_id")
+    orig_len = len(merged_df)
+    
+    merged_df = merged_df[merged_df["entry_research_group"].isin(["AD", "CN"])]
+    
+    merged_df = merged_df.rename(columns={"entry_research_group": "diagnosis"})
+    cols = list(merged_df.filter(like=metric_filter).columns) + ["PTID", "diagnosis"]
+    merged_df = merged_df[cols]
+    
+    merged_df = merged_df.dropna()
+    clean_len = len(merged_df)
+    
+    excluded = orig_len - clean_len
+    
+    return merged_df, excluded
+
 def compute_summary_statistics(cleaned_df):
     """
     Calculates mean for each tract for each group of AD and CN
@@ -67,3 +84,21 @@ def format_output(summary_df):
     if summary_df.empty:
         return []
     return summary_df.to_dict(orient='records')
+
+def calc_group_diff(merged_df, difference_type="raw"):
+    """
+    Groups by diagnosis and calculates difference for each tract
+    """
+    valid_diff_types = {"raw", "percent"}
+    if difference_type not in valid_diff_types:
+        raise ValueError(
+            f"difference_type must be one of {valid_diff_types}, "
+            f"but got '{difference_type}'.")
+    
+    grouped_df = merged_df.drop(columns=["PTID"]).groupby("diagnosis").mean()
+    fa_diff = grouped_df.loc["AD"] - grouped_df.loc["CN"]
+
+    if difference_type == "percent":
+        fa_diff = fa_diff / grouped_df.loc["AD"] * 100
+    
+    return fa_diff 

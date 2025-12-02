@@ -54,3 +54,21 @@ def calc_summary_stats(df):
 # OUTPUTS: 
 def export_summary_stats(df):
     return 1
+
+# CALC GROUP DIFFERENCES
+# INPUTS:
+# OUTPUTS: 
+def calc_group_diff(merged_df, difference_type="raw"):
+    valid_diff_types = {"raw", "percent"}
+    if difference_type not in valid_diff_types:
+        raise ValueError(
+            f"difference_type must be one of {valid_diff_types}, "
+            f"but got '{difference_type}'.")
+    
+    grouped_df = merged_df.drop(columns=["PTID"]).groupby("diagnosis").mean()
+    fa_diff = grouped_df.loc["AD"] - grouped_df.loc["CN"]
+
+    if difference_type == "percent":
+        fa_diff = fa_diff / grouped_df.loc["AD"] * 100
+    
+    return fa_diff 
