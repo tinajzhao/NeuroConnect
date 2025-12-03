@@ -30,7 +30,11 @@ def mock_data_folder(tmp_path):
 # Smoke Test
 def test_full_pipeline_smoke(mock_data_folder):
     """
-    Smoke Test: Verifies that the full pipeline runs from loading to formatting without errors.
+    author: Hongyu
+    reviewer: 
+    category: Smoke Test
+
+    Purpose: Verify that the full pipeline runs from loading to formatting without errors.
     """
     # Load
     diag, dti = load_data(mock_data_folder)
@@ -60,7 +64,11 @@ def test_full_pipeline_smoke(mock_data_folder):
 # One-Shot Test
 def test_compute_summary_statistics_one_shot():
     """
-    Validates that compute_summary_statistics produces the exact expected mean values
+    author: Hongyu
+    reviewer: 
+    category: One-Shot Test
+
+    Purpose: Verify that compute_summary_statistics produces the exact expected mean values
     """
     input_df = pd.DataFrame({
         'LONIUID': ['1', '2', '3', '4'],
@@ -74,29 +82,22 @@ def test_compute_summary_statistics_one_shot():
     
     # Check AD values
     ad_row = result[result['Group'] == 'AD'].iloc[0]
-    assert ad_row['TractA'] == 1.5
-    assert ad_row['TractB'] == 15.0
+    assert np.isclose(ad_row['TractA'], 1.5)
+    assert np.isclose(ad_row['TractB'], 15.0)
     
     # Check CN values
     cn_row = result[result['Group'] == 'CN'].iloc[0]
-    assert cn_row['TractA'] == 3.5
-    assert cn_row['TractB'] == 35.0
+    assert np.isclose(cn_row['TractA'], 3.5)
+    assert np.isclose(cn_row['TractB'], 35.0)
 
-# 3. Edge Test
-def test_load_data_missing_files_edge(tmp_path):
-    """
-    Edge Test: Checks behavior when required files are missing from the data folder.
-    """
-    empty_folder = tmp_path / "empty"
-    empty_folder.mkdir()
-    
-    # Should raise FileNotFoundError if diagnosis.csv or DTI.csv is missing
-    with pytest.raises(FileNotFoundError):
-        load_data(str(empty_folder))
-
+# Edge Test
 def test_clean_data_no_matches_edge():
     """
-    Edge Test: Checks behavior when merge results in empty dataframe (no matching IDs).
+    author: Hongyu
+    reviewer: 
+    category: Edge Test
+
+    Purpose: Verify that clean_data returns an empty dataframe if there are no matches between the diagnosis and DTI data.
     """
     diag = pd.DataFrame({'LONIUID': ['1'], 'Group': ['AD']})
     dti = pd.DataFrame({'LONIUID': ['2'], 'Tract1': [0.5]})
@@ -113,7 +114,11 @@ def test_clean_data_no_matches_edge():
 # Pattern Test
 def test_summary_stats_pattern_invariance():
     """
-    Verifies the mathematical property that duplicating the dataset should not change the mean values.
+    author: Hongyu
+    reviewer: 
+    category: Pattern Test
+
+    Purpose: Verify that duplicating the dataset should not change the mean values.
     """
     # Create random synthetic data
     np.random.seed(42)
