@@ -79,6 +79,13 @@ def calc_group_diff(merged_df, difference_type="raw"):
             f"but got '{difference_type}'.")
     
     grouped_df = merged_df.drop(columns=["PTID"]).groupby("diagnosis").mean()
+    
+    required_groups = ["AD", "CN"]
+
+    missing = [g for g in required_groups if g not in grouped_df.index]
+    if missing:
+        raise KeyError(f"Missing expected diagnosis group(s): {missing}")
+    
     fa_diff = grouped_df.loc["AD"] - grouped_df.loc["CN"]
 
     if difference_type == "percent":
