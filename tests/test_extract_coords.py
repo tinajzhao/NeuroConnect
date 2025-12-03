@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 # Import functions to test
-from src.neuroconnect.extract_coords import (
+from src.NeuroConnect.extract_coords import (
     find_atlas,
     voxel_to_mni,
     extract_tract_coords,
@@ -33,7 +33,6 @@ def test_voxel_to_mni_smoke():
     voxel = np.array([10, 20, 30])
     result = voxel_to_mni(voxel, affine)
     assert result is not None
-    return
 
 def test_voxel_to_mni_identity_matrix():
     """
@@ -48,7 +47,6 @@ def test_voxel_to_mni_identity_matrix():
     
     expected = np.array([10, 20, 30])
     np.testing.assert_array_equal(result, expected)
-    return
 
 def test_voxel_to_mni_translation():
     """
@@ -69,7 +67,6 @@ def test_voxel_to_mni_translation():
     
     expected = np.array([10, -6, 8])  # 2*50-90, 2*60-126, 2*40-72
     np.testing.assert_array_almost_equal(result, expected)
-    return
 
 def test_voxel_to_mni_returns_3d():
     """
@@ -84,7 +81,6 @@ def test_voxel_to_mni_returns_3d():
     
     assert len(result) == 3, "Result should have exactly 3 elements"
     assert result.shape == (3,), "Result shape should be (3,)"
-    return
 
 
 def test_voxel_to_mni_origin():
@@ -105,7 +101,6 @@ def test_voxel_to_mni_origin():
     
     expected = np.array([-50, -60, -40])
     np.testing.assert_array_equal(result, expected)
-    return
 
 def test_voxel_to_mni_pattern_scaling():
     """
@@ -123,4 +118,3 @@ def test_voxel_to_mni_pattern_scaling():
         expected = voxel * scale
         np.testing.assert_array_equal(result, expected)
     
-    return
