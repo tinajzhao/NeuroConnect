@@ -82,13 +82,13 @@ def test_compute_summary_statistics_one_shot():
     
     # Check AD values
     ad_row = result[result['Group'] == 'AD'].iloc[0]
-    assert ad_row['TractA'] == 1.5
-    assert ad_row['TractB'] == 15.0
+    assert np.isclose(ad_row['TractA'], 1.5)
+    assert np.isclose(ad_row['TractB'], 15.0)
     
     # Check CN values
     cn_row = result[result['Group'] == 'CN'].iloc[0]
-    assert cn_row['TractA'] == 3.5
-    assert cn_row['TractB'] == 35.0
+    assert np.isclose(cn_row['TractA'], 3.5)
+    assert np.isclose(cn_row['TractB'], 35.0)
 
 # Edge Test
 def test_clean_data_no_matches_edge():
