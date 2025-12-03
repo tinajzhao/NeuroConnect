@@ -67,3 +67,28 @@ def format_output(summary_df):
     if summary_df.empty:
         return []
     return summary_df.to_dict(orient='records')
+
+def calc_group_diff(merged_df, difference_type="raw"):
+    """
+    Groups by diagnosis and calculates difference for each tract
+    """
+    valid_diff_types = {"raw", "percent"}
+    if difference_type not in valid_diff_types:
+        raise ValueError(
+            f"difference_type must be one of {valid_diff_types}, "
+            f"but got '{difference_type}'.")
+    
+    grouped_df = merged_df.drop(columns=["PTID"]).groupby("diagnosis").mean()
+    
+    required_groups = ["AD", "CN"]
+
+    missing = [g for g in required_groups if g not in grouped_df.index]
+    if missing:
+        raise KeyError(f"Missing expected diagnosis group(s): {missing}")
+    
+    fa_diff = grouped_df.loc["AD"] - grouped_df.loc["CN"]
+
+    if difference_type == "percent":
+        fa_diff = fa_diff / grouped_df.loc["AD"] * 100
+    
+    return fa_diff 

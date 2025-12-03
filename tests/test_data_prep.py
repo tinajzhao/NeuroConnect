@@ -2,7 +2,7 @@ import pytest
 import pandas as pd
 import numpy as np
 import os
-from src.NeuroConnect.module1 import load_data, clean_data, compute_summary_statistics, format_output
+from src.NeuroConnect.data_prep import load_data, clean_data, compute_summary_statistics, format_output, calc_group_diff
 
 # Fixtures for data setup
 @pytest.fixture
@@ -141,3 +141,76 @@ def test_summary_stats_pattern_invariance():
     
     # Check if dataframes are equal (within float tolerance)
     pd.testing.assert_frame_equal(stats_original, stats_doubled)
+    
+
+# Tests for Calculating Group Differences
+def test_calc_group_diff_smoke():
+    """
+    author: Kenny
+    reviewer: 
+    category: smoke test
+    justification: check if function runs
+    """
+    test = pd.DataFrame({
+        "PTID": [1, 2, 3, 4],
+        "diagnosis": ["AD", "AD", "CN", "CN"],
+        "feature1": [1, 2, 3, 4],
+        "feature2": [5, 5, 5, 5],
+    })
+    test_fa_diff = calc_group_diff(test)
+    assert test_fa_diff is not None
+
+def test_calc_group_diff_oneshot():
+    """
+    author: Kenny
+    reviewer: 
+    category: one-shot test
+    justification: check if function outputs expected result
+    """
+    test = pd.DataFrame({
+        "PTID": [1, 2, 3, 4, 5, 6],
+        "diagnosis": ["AD", "AD", "AD", "CN", "CN", "CN"],
+        "feature1": [20, 22, 24, 10, 12, 14],  # AD mean: 22, CN mean: 12, AD-CN: 10
+        "feature2": [15, 17, 19, 5, 7, 9],     # AD mean: 17, CN mean: 7, AD-CN: 10
+    })
+    
+    expected = np.array([10.0, 10.0])
+    result = calc_group_diff(test)
+    
+    np.testing.assert_allclose(result, expected)
+
+def test_calc_group_diff_edge():
+    """
+    author: Kenny
+    reviewer: 
+    category: edge test
+    justification: check if function handles error for invalid difference_type input
+    """
+    test = pd.DataFrame({
+        "PTID": [1, 2, 3, 4],
+        "diagnosis": ["AD", "AD", "CN", "CN"],
+        "feature1": [1, 2, 3, 4],
+        "feature2": [5, 5, 5, 5],
+    })
+    with pytest.raises(ValueError, match = "difference_type must be one of"):
+        calc_group_diff(test, "number")
+
+
+def test_calc_group_diff_pattern():
+    """
+    author: Kenny
+    reviewer: 
+    category: pattern test
+    justification: check if output for groups with identical values is as expected
+    """
+    test = pd.DataFrame({
+        "PTID": [1, 2, 3, 4],
+        "diagnosis": ["AD", "AD", "CN", "CN"],
+        "feature1": [10, 10, 10, 10],
+        "feature2": [5, 5, 5, 5],
+    })
+    
+    expected = np.array([0.0, 0.0])
+    result = calc_group_diff(test)
+    
+    np.testing.assert_allclose(result, expected)

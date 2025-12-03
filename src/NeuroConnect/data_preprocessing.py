@@ -6,7 +6,7 @@ import pandas as pd
 # DATA LOADING
 # INPUTS:
 # OUTPUTS: 
-def load_data():
+def load_data2():
     dti_df = None
     diagnosis_df = None
     
@@ -26,7 +26,7 @@ def load_data():
 # OUTPUTS: 
 # not sure on specific metric filter (ended up with 75 rows)
 # if user specifies e.g. (FA) it could accidentally include columns such as MANUFACTURER
-def clean_data(dti_df, diagnosis_df, metric_filter): 
+def clean_data2(dti_df, diagnosis_df, metric_filter): 
     merged_df = dti_df.merge(diagnosis_df, how="left", left_on="PTID", right_on="subject_id")
     orig_len = len(merged_df)
     
@@ -46,11 +46,29 @@ def clean_data(dti_df, diagnosis_df, metric_filter):
 # SUMMARY STATISTICS CALCULATION
 # INPUTS:
 # OUTPUTS: 
-def calc_summary_stats(df):
+def calc_summary_stats2(df):
     return 1
 
 # SUMMARY STATISTICS EXPORT
 # INPUTS:
 # OUTPUTS: 
-def export_summary_stats(df):
+def export_summary_stats2(df):
     return 1
+
+# CALC GROUP DIFFERENCES
+# INPUTS:
+# OUTPUTS: 
+def calc_group_diff(merged_df, difference_type="raw"):
+    valid_diff_types = {"raw", "percent"}
+    if difference_type not in valid_diff_types:
+        raise ValueError(
+            f"difference_type must be one of {valid_diff_types}, "
+            f"but got '{difference_type}'.")
+    
+    grouped_df = merged_df.drop(columns=["PTID"]).groupby("diagnosis").mean()
+    fa_diff = grouped_df.loc["AD"] - grouped_df.loc["CN"]
+
+    if difference_type == "percent":
+        fa_diff = fa_diff / grouped_df.loc["AD"] * 100
+    
+    return fa_diff 
