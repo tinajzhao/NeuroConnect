@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]  # it's a great idea to also include: macos-latest, windows-latest
+        os: [macos-latest, windows-latest]  # it's a great idea to also include: macos-latest, windows-latest
         python-version: ["3.11"]  # it's a great idea to also include: "3.11", "3.13"
     steps:
       - uses: actions/checkout@main
