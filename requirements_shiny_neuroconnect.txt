@@ -6,3 +6,4 @@ numpy
 nibabel
 templateflow
 scikit-image
+pytest
