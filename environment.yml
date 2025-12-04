@@ -12,4 +12,5 @@ dependencies:
   - nibabel
   - templateflow
   - scikit-image
+  - scikit-learn
   - python<=3.12
