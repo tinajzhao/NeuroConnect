@@ -12,3 +12,4 @@ dependencies:
   - nibabel
   - templateflow
   - scikit-image
+  - python<=3.12
