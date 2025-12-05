@@ -2,14 +2,50 @@
 
 ## User Profile
 
+NeuroConnect was developed with the idea of wanting to *make neuroimaging visualizations more approachable and interactive* for non-experts in the field as well as those with limited technical backgrounds. 
+
+#### Primary Audience
+* students
+* educators
+* science communicators 
+
+#### Secondary Audience
+* researchers
+* collaborators on neuro-related projects (i.e. data scientists)
+* neuroimaging specialists 
+
+#### Example User Stories
+**Sam**
+* Sam is a undergraduate student. They have been learning about Alzheimer's Disease and need to create a presentation on it. They want to show differences in the structure of the brain. They want a simple visualization but feel intimidated on where to start. 
+
+**Riley**
+* Riley is a researcher. They want to expose their mentees to brain imaging and have them interact with examples. 
+
+**Mike**
+* Mike is a neuroscience professor teaching a unit on Alzheimer's Disease. He wants to demonstrate how white matter connectivity deteriorates in AD compared to healthy controls. He needs a simple interface to generate these visualizations for his lectures. Mike is an AD expert but has no experience with diffusion imaging analysis.
+
+**Maria**
+* Maria writes about neuroscience for a general audience publication. She wants to create visuals for an article on Alzheimer's research. Maria needs to generate accurate brain images without going through weeks of neuroimaging training. She has science communication skills but no technical imaging background.
+
+**Alex**
+* Alex teaches AP Psychology and wants to introduce students to brain imaging techniques. They're looking for an accessible tool that can show real brain data without requiring students to install software or learn programming. Alex has strong teaching skills but limited technical background in neuroimaging.
+
+**Taylor (technical)**
+* Taylor runs a university neuroimaging core facility that preprocesses DTI data for multiple research labs. They need to demonstrate data quality to investigators and validate that tract extraction pipelines are working correctly across different studies. Taylor wants automated visualization reports showing tract-level metrics across groups. They're experienced with neuroimaging pipelines but need tools that generate shareable QC reports without custom coding for each project.
+
+**Jordan**
+* Jordan is a cognitive neuroscience PhD student writing their literature review on aging and cognition. They want to explore publicly available DTI data to better understand connectivity patterns reported in papers. Jordan has basic Python skills but finds existing neuroimaging software overwhelming and poorly documented.
+
+**Casey**
+* Casey is a data scientist collaborating with a neurology research group. They want to test multple glass brain models to identify which best highlights differences between patients and controls. Casey has strong coding skills but limited neuroscience background.
 ---
 
 ## Data Sources
-* What data you will use and how it is structured.
+* Given the sensitive nature of personal health information (PHI) and its protection under HIPAA, the specific data used in this project cannot be made publicly available. However, we have provided instructions for requesting access to obtain the same datasets used in our project.
 
 ---
 
-### Alzheimer's Disease Neuroimaging Initiative (ADNI) 
+### 1. Alzheimer's Disease Neuroimaging Initiative (ADNI) 
 
 <p> Data used in this project was obtained from the Alzheimer’s Disease
 Neuroimaging Initiative (ADNI) database (adni.loni.usc.edu). ADNI was launched in
@@ -23,7 +59,7 @@ see www.adni-info.org.
 A complete listing of ADNI investigators can be found at:
 http://adni.loni.usc.edu/wp-content/uploads/how_to_apply/ADNI_Acknowledgement_List.pdf </p>
 
-#### Dataset Used in NeuroConnect
+#### Specific Dataset Used in NeuroConnect
 * ADNI_DTIROI_V1
 
 DTI = Diffusion Tensor Imaging
@@ -58,7 +94,32 @@ Information Within Dataset (242 Columns Total):
 
 2. 
 
+### 2. JHU White Matter Atlas
+
 
 ---
 
 ## Use Cases
+
+**1. View brain connectivity**
+* User profiles: educators, students, science communicators, general public
+* Components: user data, data validation and processing, brain visualization, user interaction
+
+
+**2. Compare brains (healthy vs. disease)**
+* User profiles: educators, students, science communicators
+* Components: user data, data validation and processing, brain visualization, user interaction
+
+
+**3. Upload and visualize data**
+* User profiles: researchers, data scientists collaborating on brain projects
+* Components: user data, data validation and processing, brain visualization, user interaction
+
+**4. Export brain images**
+* User profiles: science communicators, researchers, students
+* Components: user data, data validation and processing, brain visualization, user interaction, export data
+
+
+**5. Validate Data Quality or Preprocessing Results (we might not get here by the end of the project)**
+* User profiles: technical researchers, neuroimaging staff
+* Components: QC visualizers
