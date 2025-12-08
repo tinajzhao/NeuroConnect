@@ -5,17 +5,30 @@ build-backend = "hatchling.build"
 [project]
 name = "neuroconnect"
 version = "0.0.0"
-description = "Visualization tool for structural brain connectivity, intended for Alzheimer's research"
+description = "Interactive 3D visualization of structural brain connectivity from diffusion tensor imaging for Alzheimer's research"
 readme = "README.md"
-authors = [{name = "Tina Zhao"}]
-classifiers = [
+authors = [
+    {name = "Tina Zhao"},
+    {name = "Carlos Pineda-Antunez"},
+    {name = "Hongyu Mu"},
+    {name = "Kenny Yi"}
+]classifiers = [
 	"Intended Audience :: Science/Research",
 	"Programming Language :: Python :: 3",
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.9,<=3.12
 dependencies = [
 	"pandas>=2.3.0",
 	"numpy",
+	"pytest",
+	"pytest-cov",
+	"shiny",
+	"shinywidgets",
+	"plotly",
+	"nibabel",
+	"templateflow",
+	"scikit-image",
+	"scikit-learn",
 ]
 
 [project.urls]
