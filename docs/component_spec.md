@@ -415,7 +415,7 @@ Displays three brain views in single figure window.
 ## Interactions
 Example of interactions for 'Upload and Visualize Data' Use Case
 
-![Diagram showing interactions for upload and visualize data use case](images/nc_interactions.png)
+![Diagram showing interactions for upload and visualize data use case](../images/nc_interactions.png)
 
 ## Preliminary Plan
 
