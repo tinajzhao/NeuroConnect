@@ -14,3 +14,4 @@ dependencies:
   - scikit-image
   - scikit-learn
   - python<=3.12
+  - ruff
