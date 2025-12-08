@@ -1,15 +1,19 @@
 """
-Tests for Component 2: extract_coords
+Tests for tract coordinate extraction functions
 """
 
 import pytest
 import numpy as np
 import pandas as pd
 from pathlib import Path
+import tempfile
+import os
 
+import sys
+sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
 # Import functions to test
-from src.neuroconnect.extract_coords import (
+from neuroconnect.extract_coords import (
     find_atlas,
     voxel_to_mni,
     extract_tract_coords,
@@ -22,7 +26,53 @@ from src.neuroconnect.extract_coords import (
     save_coordinates,
 )
 
+# Tests for find_atlas
+def test_find_atlas_smoke():
+    """
+    type: smoke test
+    """
+    try:
+        result = find_atlas()
+        assert result is not None, "find_atlas should return a path string"
+        assert isinstance(result, str), f"Expected str, got {type(result)}"
+    except FileNotFoundError:
+        # Expected if atlas not installed - test passes
+        pass
 
+
+def test_find_atlas_returns_string():
+    """
+    type: edge test - if atlas is found, result should be a string path.
+    """
+    try:
+        result = find_atlas()
+        assert isinstance(result, str), (
+            f"find_atlas should return str path, got {type(result)}"
+        )
+        assert len(result) > 0, "find_atlas should return non-empty path"
+    except FileNotFoundError:
+        # Expected if atlas not installed
+        pass
+
+
+def test_find_atlas_file_exists():
+    """
+    type: edge test - if find_atlas succeeds, the file should actually exist.
+    """
+    try:
+        atlas_path = find_atlas()
+        assert Path(atlas_path).exists(), (
+            f"find_atlas returned path that doesn't exist: {atlas_path}"
+        )
+        assert Path(atlas_path).is_file(), (
+            f"find_atlas returned path that isn't a file: {atlas_path}"
+        )
+    except FileNotFoundError:
+        # Expected if atlas not installed
+        pass
+
+
+# Tests for voxel_to_mni
 def test_voxel_to_mni_smoke():
     """
     author: tinajzhao
@@ -32,8 +82,8 @@ def test_voxel_to_mni_smoke():
     affine = np.eye(4)
     voxel = np.array([10, 20, 30])
     result = voxel_to_mni(voxel, affine)
-    assert result is not None
-    return
+    assert result is not None, "voxel_to_mni should return a result"
+
 
 def test_voxel_to_mni_identity_matrix():
     """
@@ -47,8 +97,10 @@ def test_voxel_to_mni_identity_matrix():
     result = voxel_to_mni(voxel, affine)
     
     expected = np.array([10, 20, 30])
-    np.testing.assert_array_equal(result, expected)
-    return
+    np.testing.assert_array_equal(
+        result, expected,
+        err_msg="Identity matrix should preserve coordinates"
+    )
 
 def test_voxel_to_mni_translation():
     """
@@ -68,8 +120,10 @@ def test_voxel_to_mni_translation():
     result = voxel_to_mni(voxel, affine)
     
     expected = np.array([10, -6, 8])  # 2*50-90, 2*60-126, 2*40-72
-    np.testing.assert_array_almost_equal(result, expected)
-    return
+    np.testing.assert_array_almost_equal(
+        result, expected,
+        err_msg=f"Translation failed: expected {expected}, got {result}"
+    )
 
 def test_voxel_to_mni_returns_3d():
     """
@@ -82,9 +136,12 @@ def test_voxel_to_mni_returns_3d():
     
     result = voxel_to_mni(voxel, affine)
     
-    assert len(result) == 3, "Result should have exactly 3 elements"
-    assert result.shape == (3,), "Result shape should be (3,)"
-    return
+    assert len(result) == 3, (
+        f"Result should have exactly 3 elements, got {len(result)}"
+    )
+    assert result.shape == (3,), (
+        f"Result shape should be (3,), got {result.shape}"
+    )
 
 
 def test_voxel_to_mni_origin():
@@ -104,8 +161,10 @@ def test_voxel_to_mni_origin():
     result = voxel_to_mni(voxel, affine)
     
     expected = np.array([-50, -60, -40])
-    np.testing.assert_array_equal(result, expected)
-    return
+    np.testing.assert_array_equal(
+        result, expected,
+        err_msg=f"Origin transformation failed: expected {expected}, got {result}"
+    )
 
 def test_voxel_to_mni_pattern_scaling():
     """
@@ -121,6 +180,10 @@ def test_voxel_to_mni_pattern_scaling():
         affine = np.diag([scale, scale, scale, 1])
         result = voxel_to_mni(voxel, affine)
         expected = voxel * scale
-        np.testing.assert_array_equal(result, expected)
-    
-    return
+        np.testing.assert_array_equal(
+            result, expected,
+            err_msg=(
+                f"Scaling pattern failed at scale={scale}: "
+                f"expected {expected}, got {result}"
+            )
+        )
