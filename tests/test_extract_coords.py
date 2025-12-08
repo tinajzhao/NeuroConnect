@@ -187,3 +187,80 @@ def test_voxel_to_mni_pattern_scaling():
                 f"expected {expected}, got {result}"
             )
         )
+
+# Tests for extract_tract_coords, extracting coordinates for a single tract
+def test_extract_tract_coords_smoke():
+    """
+    type: smoke test.
+    """
+    # Create simple 3D atlas with one ROI
+    atlas_data = np.zeros((10, 10, 10))
+    atlas_data[4:6, 4:6, 4:6] = 1  # ROI 1 is a small cube
+    atlas_affine = np.eye(4)
+    
+    result = extract_tract_coords(atlas_data, atlas_affine, 1)
+    
+    assert result is not None, "extract_tract_coords should return a result for valid ROI"
+    assert 'start' in result, "Result should contain 'start' key"
+    assert 'end' in result, "Result should contain 'end' key"
+    assert 'centroid' in result, "Result should contain 'centroid' key"
+
+
+def test_extract_tract_coords_empty_roi():
+    """
+    type: edge test, non-existent ROI should return None.
+    """
+    atlas_data = np.zeros((10, 10, 10))
+    atlas_data[4:6, 4:6, 4:6] = 1  # Only ROI 1 exists
+    atlas_affine = np.eye(4)
+    
+    result = extract_tract_coords(atlas_data, atlas_affine, 2)  # ROI 2 doesn't exist
+    
+    assert result is None, (
+        "extract_tract_coords should return None for non-existent ROI, "
+        f"but got {result}"
+    )
+
+
+def test_extract_tract_coords_returns_correct_keys():
+    """
+    type: edge test, result should have correct dictionary structure.
+    """
+    atlas_data = np.zeros((10, 10, 10))
+    atlas_data[4:6, 4:6, 4:6] = 1
+    atlas_affine = np.eye(4)
+    
+    result = extract_tract_coords(atlas_data, atlas_affine, 1)
+    
+    assert isinstance(result, dict), (
+        f"Result should be dict, got {type(result)}"
+    )
+    
+    required_keys = ['start', 'end', 'centroid']
+    for key in required_keys:
+        assert key in result, f"Result missing required key: {key}"
+        assert len(result[key]) == 3, (
+            f"Coordinate '{key}' should have 3 elements, got {len(result[key])}"
+        )
+
+
+def test_extract_tract_coords_single_voxel():
+    """
+    type: edge test, single voxel ROI should have start == end == centroid.
+    """
+    atlas_data = np.zeros((10, 10, 10))
+    atlas_data[5, 5, 5] = 1  # Single voxel
+    atlas_affine = np.eye(4)
+    
+    result = extract_tract_coords(atlas_data, atlas_affine, 1)
+    
+    # All three should be approximately the same location
+    np.testing.assert_array_almost_equal(
+        result['start'], result['end'],
+        err_msg="Single voxel: start should equal end"
+    )
+    np.testing.assert_array_almost_equal(
+        result['start'], result['centroid'],
+        err_msg="Single voxel: start should equal centroid"
+    )
+
