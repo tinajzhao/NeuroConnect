@@ -264,3 +264,57 @@ def test_extract_tract_coords_single_voxel():
         err_msg="Single voxel: start should equal centroid"
     )
 
+# Tests for extract_base_tracts, loop extract_tract_coords through 48 base tracts
+def test_extract_base_tracts_smoke():
+    """
+    type: smoke test
+    """
+    # Create simple atlas with a few ROIs
+    atlas_data = np.zeros((10, 10, 10))
+    atlas_data[2:4, 2:4, 2:4] = 1  # ROI 1
+    atlas_data[6:8, 6:8, 6:8] = 2  # ROI 2
+    atlas_affine = np.eye(4)
+    
+    result = extract_base_tracts(atlas_data, atlas_affine)
+    
+    assert result is not None, "extract_base_tracts should return a dataframe"
+    assert isinstance(result, pd.DataFrame), (
+        f"Result should be DataFrame, got {type(result)}"
+    )
+
+
+def test_extract_base_tracts_returns_dataframe():
+    """
+    type: edge test, esult should be a dataframe with correct columns.
+    """
+    atlas_data = np.zeros((10, 10, 10))
+    atlas_data[2:4, 2:4, 2:4] = 1
+    atlas_affine = np.eye(4)
+    
+    result = extract_base_tracts(atlas_data, atlas_affine)
+    
+    expected_columns = [
+        'roi', 'start_x', 'start_y', 'start_z',
+        'end_x', 'end_y', 'end_z',
+        'centroid_x', 'centroid_y', 'centroid_z'
+    ]
+    
+    for col in expected_columns:
+        assert col in result.columns, (
+            f"DataFrame missing expected column: {col}"
+        )
+
+
+def test_extract_base_tracts_empty_atlas():
+    """
+    type: edge test, empty atlas should return empty dataframe.
+    """
+    atlas_data = np.zeros((10, 10, 10))  # No ROIs
+    atlas_affine = np.eye(4)
+    
+    result = extract_base_tracts(atlas_data, atlas_affine)
+    
+    assert len(result) == 0, (
+        f"Empty atlas should produce empty DataFrame, got {len(result)} rows"
+    )
+
