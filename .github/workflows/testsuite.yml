@@ -43,6 +43,9 @@ jobs:
 
       - name: Install
         run: pip install --no-deps .
+      
+      - name: Lint with Ruff
+        run : ruff check
 
       - name: Run Tests
         run: |
