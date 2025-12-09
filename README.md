@@ -103,6 +103,18 @@ Inside the Shiny sidebar, click:
 
 ---
 
+## Example Workflow
+
+This workflow highlights how our tool operates from users uploading data to the creating of visualizations.
+
+![Diagram showing interactions for upload and visualize data use case](images/nc_interactions.png)
+
+This is a list of our planned components and our current progress in developing them.
+
+![Diagram showing list of components](images/nc_progress.png)
+
+---
+
 ## Team Members & Contributions
 
 | Team Member | Department | Role | Contributions |
@@ -110,7 +122,7 @@ Inside the Shiny sidebar, click:
 | **Tina Zhao** | Psychology | Lead Developer | PLEASE ADD CONTRIBUTION |
 | **Carlos Pineda** | Pharmacy | Developer | Shiny UI design, node comparison engine, unit test for visualization |
 | **Hongyu Mu** | Statistics | Developer | Revise shiny code using real data, writing tests for data loading and summary statistics |
-| **Kenny Yi** | Biomedical Informatics and Medical Education | Developer | PLEASE ADD CONTRIBUTION |
+| **Kenny Yi** | Biomedical Informatics and Medical Education | Developer | Revise language to be user-friendly, documentation, logo, diagrams, unit tests for group difference calculator |
 
 ---
 
