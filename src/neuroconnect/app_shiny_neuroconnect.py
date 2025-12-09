@@ -254,12 +254,12 @@ CAMERAS = {
 # ---------------------------
 app_ui = ui.page_sidebar(
     ui.sidebar(
-        ui.h4("Data — Healthy vs Sick"),
-        ui.input_file("csvA","Healthy CSV (x,y,z[,id,group,value])",accept=[".csv"]),
-        ui.input_file("csvB","Sick CSV (x,y,z[,id,group,value])",accept=[".csv"]),
+        ui.h4("Data — Cognitively Normal (CN) vs Alzheimer's Disease (AD)"),
+        ui.input_file("csvA","CN CSV (x,y,z[,id,group,value])",accept=[".csv"]),
+        ui.input_file("csvB","AD CSV (x,y,z[,id,group,value])",accept=[".csv"]),
+        ui.input_action_button("demoA","Use demo (CN)"),
+        ui.input_action_button("demoB","Use demo (AD)"),
         ui.input_action_button("load_tract_data","Load tract data (CN/AD)"),
-        ui.input_action_button("demoA","Use demo (Healthy)"),
-        ui.input_action_button("demoB","Use demo (Sick)"),
         ui.hr(),
         ui.h4("View mode"),
         ui.input_select("view_mode", "Mode", ["Side-by-side", "Brain differences"], selected="Side-by-side"),
