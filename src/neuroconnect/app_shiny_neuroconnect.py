@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
 import io
+from pathlib import Path
 
 # Optional heavy deps for realistic MNI surface
 try:
@@ -64,6 +65,56 @@ def mark_nearest(nodes_df, targets_xyz, radius_mm=8.0):
     nodes_df = nodes_df.copy()
     nodes_df["selected"] = nodes_df.get("selected", False) | sel
     return nodes_df
+
+def load_tract_data(clean_csv_path=None, coords_csv_path=None):
+    """
+    Load and merge clean.csv and jhu_coordinates.csv into node format.
+    
+    :param clean_csv_path: Path to clean.csv (default: data/clean.csv)
+    :param coords_csv_path: Path to jhu_coordinates.csv (default: data/jhu_coordinates.csv)
+    :return: Dictionary with 'CN' and 'AD' keys, each containing DataFrame with x,y,z,id,group,value
+    """
+    if clean_csv_path is None:
+        clean_csv_path = Path(__file__).parent.parent.parent / 'data' / 'clean.csv'
+    if coords_csv_path is None:
+        coords_csv_path = Path(__file__).parent.parent.parent / 'data' / 'jhu_coordinates.csv'
+    
+    clean_df = pd.read_csv(clean_csv_path)
+    coords_df = pd.read_csv(coords_csv_path)
+    
+    # Get tract columns (exclude diagnosis)
+    tract_cols = [c for c in clean_df.columns if c != 'diagnosis']
+    
+    results = {}
+    for diagnosis in clean_df['diagnosis'].unique():
+        diag_row = clean_df[clean_df['diagnosis'] == diagnosis].iloc[0]
+        nodes = []
+        
+        for tract_name in tract_cols:
+            value = diag_row[tract_name]
+            if pd.isna(value):
+                continue
+            
+            # Match tract name in coordinates (handle exact match or variations)
+            coord_match = coords_df[coords_df['roi'] == tract_name]
+            if len(coord_match) == 0:
+                # Try case-insensitive match
+                coord_match = coords_df[coords_df['roi'].str.upper() == tract_name.upper()]
+            
+            if len(coord_match) > 0:
+                coord_row = coord_match.iloc[0]
+                nodes.append({
+                    'id': tract_name,
+                    'x': coord_row['centroid_x'],
+                    'y': coord_row['centroid_y'],
+                    'z': coord_row['centroid_z'],
+                    'group': '1',  # Can be customized later
+                    'value': float(value)
+                })
+        
+        results[diagnosis] = pd.DataFrame(nodes)
+    
+    return results
 
 # ---------------------------
 # Surface helpers
@@ -206,6 +257,7 @@ app_ui = ui.page_sidebar(
         ui.h4("Data — Healthy vs Sick"),
         ui.input_file("csvA","Healthy CSV (x,y,z[,id,group,value])",accept=[".csv"]),
         ui.input_file("csvB","Sick CSV (x,y,z[,id,group,value])",accept=[".csv"]),
+        ui.input_action_button("load_tract_data","Load tract data (CN/AD)"),
         ui.input_action_button("demoA","Use demo (Healthy)"),
         ui.input_action_button("demoB","Use demo (Sick)"),
         ui.hr(),
@@ -274,16 +326,32 @@ app_ui = ui.page_sidebar(
 def server(input, output, session):
     demoA = reactive.Value(False)
     demoB = reactive.Value(False)
+    use_tract_data = reactive.Value(False)
+    tract_data_cache = reactive.Value(None)
+
+    @reactive.Effect
+    @reactive.event(input.load_tract_data)
+    def _load_tract_data():
+        try:
+            data = load_tract_data()
+            tract_data_cache.set(data)
+            use_tract_data.set(True)
+            demoA.set(False)
+            demoB.set(False)
+        except Exception as e:
+            print(f"Error loading tract data: {e}")
 
     @reactive.Effect
     @reactive.event(input.demoA)
     def _demoA():
         demoA.set(True)
+        use_tract_data.set(False)
 
     @reactive.Effect
     @reactive.event(input.demoB)
     def _demoB():
         demoB.set(True)
+        use_tract_data.set(False)
 
     def prepare_nodes(raw_df: pd.DataFrame) -> pd.DataFrame:
         df = normalize_columns(raw_df)
@@ -298,7 +366,11 @@ def server(input, output, session):
 
     @reactive.Calc
     def df_A():
-        if input.csvA() and not demoA.get():
+        if use_tract_data.get() and tract_data_cache.get() is not None:
+            data = tract_data_cache.get()
+            if 'CN' in data:
+                return prepare_nodes(data['CN'])
+        if input.csvA() and not demoA.get() and not use_tract_data.get():
             file = input.csvA()[0]
             raw = pd.read_csv(io.BytesIO(file.read()))
             return prepare_nodes(raw)
@@ -307,7 +379,11 @@ def server(input, output, session):
 
     @reactive.Calc
     def df_B():
-        if input.csvB() and not demoB.get():
+        if use_tract_data.get() and tract_data_cache.get() is not None:
+            data = tract_data_cache.get()
+            if 'AD' in data:
+                return prepare_nodes(data['AD'])
+        if input.csvB() and not demoB.get() and not use_tract_data.get():
             file = input.csvB()[0]
             raw = pd.read_csv(io.BytesIO(file.read()))
             return prepare_nodes(raw)
