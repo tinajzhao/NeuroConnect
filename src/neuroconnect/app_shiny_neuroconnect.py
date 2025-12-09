@@ -1,17 +1,17 @@
-
-from shiny import App, ui, render, reactive
-from shinywidgets import output_widget, render_plotly
-import plotly.graph_objects as go
-import pandas as pd
-import numpy as np
 import io
 from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+from shiny import App, reactive, render, ui
+from shinywidgets import output_widget, render_plotly
 
 # Optional heavy deps for realistic MNI surface
 try:
     import nibabel as nib
-    from templateflow.api import get as tflow_get
     from skimage.measure import marching_cubes
+    from templateflow.api import get as tflow_get
     HAVE_NEURO = True
 except Exception:
     HAVE_NEURO = False
@@ -48,13 +48,23 @@ def normalize_columns(df):
     for r in required:
         if r not in cols:
             raise ValueError(f"Missing required column: {r}")
-    df = df.rename(columns={cols["x"]:"x", cols["y"]:"y", cols["z"]:"z"})
-    if "id" in cols: df = df.rename(columns={cols["id"]:"id"})
-    else: df["id"] = [f"node_{i}" for i in range(len(df))]
-    if "group" in cols: df = df.rename(columns={cols["group"]:"group"})
-    else: df["group"] = "1"
-    if "value" in cols: df = df.rename(columns={cols["value"]:"value"})
-    return df.dropna(subset=["x","y","z"]).reset_index(drop=True)
+    
+    df = df.rename(columns={cols["x"]: "x", cols["y"]: "y", cols["z"]: "z"})
+
+    if "id" in cols:
+        df = df.rename(columns={cols["id"]: "id"})
+    else:
+        df["id"] = [f"node_{i}" for i in range(len(df))]
+
+    if "group" in cols:
+        df = df.rename(columns={cols["group"]: "group"})
+    else:
+        df["group"] = "1"
+
+    if "value" in cols:
+        df = df.rename(columns={cols["value"]: "value"})
+
+    return df.dropna(subset=["x", "y", "z"]).reset_index(drop=True)
 
 def mark_nearest(nodes_df, targets_xyz, radius_mm=8.0):
     pts = nodes_df[["x","y","z"]].to_numpy()
@@ -131,13 +141,21 @@ def ellipsoid_mesh(rx, ry, rz, side="both", u_steps=40, v_steps=40):
         x,y,z = np.where(mask,x,np.nan),np.where(mask,y,np.nan),np.where(mask,z,np.nan)
     pts = np.vstack([x.ravel(), y.ravel(), z.ravel()]).T
     i,j,k=[],[],[]
-    def idx(ui,vi): return ui*v_steps+vi
-    for ui in range(u_steps-1):
-        for vi in range(v_steps-1):
-            if not (np.isnan(x[ui,vi]) or np.isnan(x[ui+1,vi]) or np.isnan(x[ui,vi+1]) or np.isnan(x[ui+1,vi+1])):
-                i += [idx(ui,vi), idx(ui+1,vi)]
-                j += [idx(ui+1,vi), idx(ui+1,vi+1)]
-                k += [idx(ui,vi+1), idx(ui,vi+1)]
+    def idx(u_idx, v_idx):
+        return u_idx * v_steps + v_idx
+
+    for u_idx in range(u_steps - 1):
+        for v_idx in range(v_steps - 1):
+            # Check for NaNs in the quad
+            if not (
+                np.isnan(x[u_idx, v_idx])
+                or np.isnan(x[u_idx + 1, v_idx])
+                or np.isnan(x[u_idx, v_idx + 1])
+                or np.isnan(x[u_idx + 1, v_idx + 1])
+            ):
+                i += [idx(u_idx, v_idx), idx(u_idx + 1, v_idx)]
+                j += [idx(u_idx + 1, v_idx), idx(u_idx + 1, v_idx + 1)]
+                k += [idx(u_idx,v_idx+1), idx(u_idx,v_idx+1)]
     return pts,i,j,k
 
 def make_ellipsoid_traces(opacity=0.15):
@@ -151,9 +169,26 @@ def make_ellipsoid_traces(opacity=0.15):
 
 def load_mni_mask_path():
     candidates = [
-        dict(template="MNI152NLin2009cAsym", desc="brain", resolution=1, suffix="mask", extension="nii.gz"),
-        dict(template="MNI152NLin2009cAsym", desc="brain", resolution=2, suffix="mask", extension="nii.gz"),
-        dict(template="MNI152NLin2009cAsym", resolution=1, suffix="mask", extension="nii.gz"),
+        dict(
+            template="MNI152NLin2009cAsym",
+            desc="brain",
+            resolution=1,
+            suffix="mask",
+            extension="nii.gz",
+        ),
+        dict(
+            template="MNI152NLin2009cAsym",
+            desc="brain",
+            resolution=2,
+            suffix="mask",
+            extension="nii.gz",
+        ),
+        dict(
+            template="MNI152NLin2009cAsym",
+            resolution=1,
+            suffix="mask",
+            extension="nii.gz",
+        ),
     ]
     for kw in candidates:
         try:
@@ -262,7 +297,10 @@ app_ui = ui.page_sidebar(
         ui.input_action_button("load_tract_data","Load tract data (CN/AD)"),
         ui.hr(),
         ui.h4("View mode"),
-        ui.input_select("view_mode", "Mode", ["Side-by-side", "Brain differences"], selected="Side-by-side"),
+        ui.input_select(
+            "view_mode", "Mode", ["Side-by-side", "Brain differences"], 
+            selected="Side-by-side"
+        ),
         ui.hr(),
         ui.h4("Highlighting & AOI"),
         ui.input_text("ids","IDs to highlight",""),
@@ -408,9 +446,17 @@ def server(input, output, session):
         if input.edge_mode() == "off" or len(df) < 2:
             return
         if input.edge_mode() == "kNN":
-            edges = build_edges_knn(df, k=int(input.edge_k()), max_edges=int(input.edge_max()))
+            edges = build_edges_knn(
+                df, 
+                k=int(input.edge_k()), 
+                max_edges=int(input.edge_max())
+            )
         else:
-            edges = build_edges_distance(df, max_dist=float(input.edge_maxdist()), max_edges=int(input.edge_max()))
+            edges = build_edges_distance(
+                df, 
+                max_dist=float(input.edge_maxdist()), 
+                max_edges=int(input.edge_max())
+            )
         if edges:
             xs, ys, zs = edges_to_plotly_lines(df, edges)
             traces.append(go.Scatter3d(
@@ -434,22 +480,38 @@ def server(input, output, session):
         hi_mask = df["selected"].to_numpy()
         lo_mask = ~hi_mask
 
+        def _get_hover_text(sub_df):
+            texts = []
+            for r in sub_df.itertuples(index=False):
+                txt = f"{r.id} | group {r.group}"
+                if hasattr(r, "value"):
+                    txt += f" | value {getattr(r, 'value'):.3f}"
+                texts.append(txt)
+            return texts
+
         if lo_mask.any():
             lo = df[lo_mask]
             traces.append(go.Scatter3d(
                 x=lo["x"], y=lo["y"], z=lo["z"], mode="markers",
-                marker=dict(size=sizes[lo_mask].astype(float), opacity=alpha),
+                marker=dict(
+                    size=sizes[lo_mask].astype(float), 
+                    opacity=alpha
+                ),
                 name=f"{tag}Nodes",
-                text=[f"{r.id} | group {r.group}" + (f" | value {getattr(r,'value'):.3f}" if hasattr(r,'value') else "") for r in lo.itertuples(index=False)],
+                text=_get_hover_text(lo),
                 hoverinfo="text"
             ))
         if hi_mask.any():
             hi = df[hi_mask]
             traces.append(go.Scatter3d(
                 x=hi["x"], y=hi["y"], z=hi["z"], mode="markers",
-                marker=dict(size=(sizes[hi_mask] + 3).astype(float), symbol="diamond", opacity=1.0),
+                marker=dict(
+                    size=(sizes[hi_mask] + 3).astype(float), 
+                    symbol="diamond", 
+                    opacity=1.0
+                ),
                 name=f"{tag}Highlighted",
-                text=[f"{r.id} | group {r.group}" + (f" | value {getattr(r,'value'):.3f}" if hasattr(r,'value') else "") for r in hi.itertuples(index=False)],
+                text=_get_hover_text(hi),
                 hoverinfo="text"
             ))
 
@@ -469,8 +531,11 @@ def server(input, output, session):
         B = df_B().copy()
         # Merge by id; keep positions (x,y,z) from A where available, else from B.
         keep = ["id","x","y","z","value","group"]
-        A2 = A[[c for c in keep if c in A.columns]].rename(columns={c: f"{c}_A" for c in keep if c!="id"})
-        B2 = B[[c for c in keep if c in B.columns]].rename(columns={c: f"{c}_B" for c in keep if c!="id"})
+        cols_A = [c for c in keep if c in A.columns]
+        A2 = A[cols_A].rename(columns={c: f"{c}_A" for c in keep if c != "id"})
+
+        cols_B = [c for c in keep if c in B.columns]
+        B2 = B[cols_B].rename(columns={c: f"{c}_B" for c in cols_B if c != "id"})
         m = pd.merge(A2, B2, on="id", how="outer", indicator=True)
 
         # Coordinates: prefer A else B
