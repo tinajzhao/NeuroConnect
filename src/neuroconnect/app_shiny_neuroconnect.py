@@ -16,7 +16,7 @@ try:
 except Exception:
     HAVE_NEURO = False
 
-APP_TITLE = "🧠 NeuroConnect visualizator"
+APP_TITLE = "🧠 NeuroConnect"
 
 RX, RY, RZ = 90, 120, 80  # ellipsoid radii (mm)
 
@@ -294,11 +294,11 @@ app_ui = ui.page_sidebar(
         "input.view_mode == 'Side-by-side'",
         ui.layout_columns(
             ui.card(
-                ui.card_header("Healthy"),
+                ui.card_header("Cognitively Normal (CN)"),
                 output_widget("p3d_A"),
             ),
             ui.card(
-                ui.card_header("Sick"),
+                ui.card_header("Alzheimer's Disease (AD)"),
                 output_widget("p3d_B"),
             ),
             col_widths=[6,6]
@@ -552,7 +552,7 @@ def server(input, output, session):
     def p3d_A():
         if input.view_mode() != "Side-by-side":
             return go.Figure()
-        fig = make_fig_for_df(df_A(), "Healthy")
+        fig = make_fig_for_df(df_A(), "Cognitively Normal (CN)")
         fig.update_scenes(camera=CAMERAS.get(input.camera(), CAMERAS["isometric"]))
         return fig
 
@@ -562,7 +562,7 @@ def server(input, output, session):
     def p3d_B():
         if input.view_mode() != "Side-by-side":
             return go.Figure()
-        fig = make_fig_for_df(df_B(), "Sick")
+        fig = make_fig_for_df(df_B(), "Alzheimer's Disease (AD)")
         if input.sync_cam():
             fig.update_scenes(camera=CAMERAS.get(input.camera(), CAMERAS["isometric"]))
         return fig

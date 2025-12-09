@@ -1,3 +1,4 @@
+![NeuroConnect Logo](images/nc_logo.png)
 # NeuroConnect
 
 This is class project for CSE 583, Autumn 2025

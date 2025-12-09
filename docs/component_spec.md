@@ -103,6 +103,32 @@ Creates or overwrites file at output_path. File becomes input for Component 3.
 
 ---
 
+#### Sub-component 1.5: Group Difference Calculator
+
+**Name:** Group Difference Calculator
+
+**What it does:**  
+Calculates difference in FA values between AD and CN groups for each tract, to be visualized with diverging colormap.
+
+**Inputs (with type information):**
+- `fa_ad`: numpy array (N,) with AD group FA values
+- `fa_cn`: numpy array (N,) with CN group FA values
+- `difference_type`: string, "raw" or "percent" (default: "raw")
+
+**Outputs (with type information):**
+- `fa_difference`: numpy array (N,) with differences (AD - CN)
+  - Negative values = lower FA in AD (worse integrity)
+  - Positive values = higher FA in AD (rare)
+- `colormap_config`: *******complete this later**
+
+**Components used:**  
+numpy subtraction
+
+**Side effects:**  
+None - pure computation
+
+---
+
 ### Component 2: Tract Coordinate Extraction
 
 #### Sub-component 2.1: Atlas File Locator
@@ -358,33 +384,7 @@ Displays interactive plot in browser/notebook. May save figure to disk if save_p
 
 ---
 
-#### Sub-component 3.6: Group Difference Calculator
-
-**Name:** Group Difference Calculator
-
-**What it does:**  
-Calculates difference in FA values between AD and CN groups for each tract, to be visualized with diverging colormap.
-
-**Inputs (with type information):**
-- `fa_ad`: numpy array (N,) with AD group FA values
-- `fa_cn`: numpy array (N,) with CN group FA values
-- `difference_type`: string, "raw" or "percent" (default: "raw")
-
-**Outputs (with type information):**
-- `fa_difference`: numpy array (N,) with differences (AD - CN)
-  - Negative values = lower FA in AD (worse integrity)
-  - Positive values = higher FA in AD (rare)
-- `colormap_config`: *******complete this later**
-
-**Components used:**  
-numpy subtraction
-
-**Side effects:**  
-None - pure computation
-
----
-
-#### Sub-component 3.7: Comparison Overlay Visualizer
+#### Sub-component 3.6: Comparison Overlay Visualizer
 
 **Name:** Side-by-Side Group Comparison Plotter
 
@@ -410,10 +410,21 @@ Sub-component 3.5 called three times with different data, plotly.subplots
 **Side effects:**  
 Displays three brain views in single figure window.
 
-
-
+---
 
 ## Interactions
+Example of interactions for 'Upload and Visualize Data' Use Case
 
+![Diagram showing interactions for upload and visualize data use case](../images/nc_interactions.png)
 
 ## Preliminary Plan
+
+1a. Functions for Components 1, 2, 3 (Data preparation, Tract coordinate extraction, Brain visualization)
+1b. Tests for Components 1, 2, 3 (Data preparation, Tract coordinate extraction, Brain visualization)
+
+2. Write Components for User Data and Export Data
+
+3a. Functions for Components for User Data and Export Data
+3b. Tests for Components for User Data and Export Data
+
+4. Connect Different Components
