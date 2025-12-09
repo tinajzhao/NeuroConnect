@@ -9,7 +9,7 @@ The tool supports:
 
 - 3D *glass brain* rendering (ellipsoid or MNI surface)
 - Overlaying nodes from healthy vs. diseased brains
-- Visualizing differences across conditions (e.g., Alzheimer’s vs. healthy)
+- Visualizing differences across conditions (e.g., Alzheimer’s vs. Cognitively Normal)
 - Uploading **custom coordinate datasets**
 - Displaying **node-level connections (edges)**
 - Highlighting regions of interest (AOI) using a 3D sphere
@@ -31,7 +31,7 @@ The app requires **no specialized neuroimaging software** and works with simple 
 
 ---
 
-##️ Installation
+## Installation
 
 Clone the repository:
 
@@ -73,7 +73,7 @@ shiny run --reload neuroconnect_app.py
 
 You can then load:
 
-- Healthy vs. Sick datasets  
+- CN vs. AD datasets  
 - Demo datasets  
 - Region-of-interest and edge options  
 - Side-by-side or differential visualizations  
@@ -86,19 +86,19 @@ You can then load:
 
 Your dataset must contain:
 
-| x (mm) | y (mm) | z (mm) | diagnosis | metric value |
+| Start_x (mm) | Start_y (mm) | Start_z (mm) | End_x (mm) | End_y (mm) | End_z (mm) | diagnosis | metric value |
 |-------|-------|-------|----|-------|
-| 12.4 | -33.2 | 18.0 | CT/AD | 0.42 |
+| 12.4 | -33.2 | 18.0 | CN/AD | 0.42 |
 
-Required: `x`, `y`, `z`, `diagnosis`, `etric value`  
+Required: `x`, `y`, `z`(all of starts and ends), `diagnosis`, `etric value`  
 Optional: `id`
 
 ### Demo Mode
 
 Inside the Shiny sidebar, click:
 
-- **Use demo (Healthy)**
-- **Use demo (Sick)**
+- **Use demo (CN)**
+- **Use demo (AD)**
 - **Render / Update**
 
 ---
