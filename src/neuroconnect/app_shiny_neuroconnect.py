@@ -15,7 +15,7 @@ try:
 except Exception:
     HAVE_NEURO = False
 
-APP_TITLE = "🧠 NeuroConnect visualizator"
+APP_TITLE = "🧠 NeuroConnect"
 
 RX, RY, RZ = 90, 120, 80  # ellipsoid radii (mm)
 
@@ -203,11 +203,11 @@ CAMERAS = {
 # ---------------------------
 app_ui = ui.page_sidebar(
     ui.sidebar(
-        ui.h4("Data — Healthy vs Sick"),
-        ui.input_file("csvA","Healthy CSV (x,y,z[,id,group,value])",accept=[".csv"]),
-        ui.input_file("csvB","Sick CSV (x,y,z[,id,group,value])",accept=[".csv"]),
-        ui.input_action_button("demoA","Use demo (Healthy)"),
-        ui.input_action_button("demoB","Use demo (Sick)"),
+        ui.h4("Data — Cognitively Normal (CN) vs Alzheimer's Disease (AD)"),
+        ui.input_file("csvA","CN CSV (x,y,z[,id,group,value])",accept=[".csv"]),
+        ui.input_file("csvB","AD CSV (x,y,z[,id,group,value])",accept=[".csv"]),
+        ui.input_action_button("demoA","Use demo (CN)"),
+        ui.input_action_button("demoB","Use demo (AD)"),
         ui.hr(),
         ui.h4("View mode"),
         ui.input_select("view_mode", "Mode", ["Side-by-side", "Brain differences"], selected="Side-by-side"),
@@ -242,11 +242,11 @@ app_ui = ui.page_sidebar(
         "input.view_mode == 'Side-by-side'",
         ui.layout_columns(
             ui.card(
-                ui.card_header("Healthy"),
+                ui.card_header("Cognitively Normal (CN)"),
                 output_widget("p3d_A"),
             ),
             ui.card(
-                ui.card_header("Sick"),
+                ui.card_header("Alzheimer's Disease (AD)"),
                 output_widget("p3d_B"),
             ),
             col_widths=[6,6]
@@ -476,7 +476,7 @@ def server(input, output, session):
     def p3d_A():
         if input.view_mode() != "Side-by-side":
             return go.Figure()
-        fig = make_fig_for_df(df_A(), "Healthy")
+        fig = make_fig_for_df(df_A(), "Cognitively Normal (CN)")
         fig.update_scenes(camera=CAMERAS.get(input.camera(), CAMERAS["isometric"]))
         return fig
 
@@ -486,7 +486,7 @@ def server(input, output, session):
     def p3d_B():
         if input.view_mode() != "Side-by-side":
             return go.Figure()
-        fig = make_fig_for_df(df_B(), "Sick")
+        fig = make_fig_for_df(df_B(), "Alzheimer's Disease (AD)")
         if input.sync_cam():
             fig.update_scenes(camera=CAMERAS.get(input.camera(), CAMERAS["isometric"]))
         return fig
