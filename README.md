@@ -87,7 +87,7 @@ You can then load:
 Your dataset must contain:
 
 | x (mm) | y (mm) | z (mm) | diagnosis | metric value |
-|-------|-------|-------|----|-------|--------|
+|-------|-------|-------|----|-------|
 | 12.4 | -33.2 | 18.0 | CT/AD | 0.42 |
 
 Required: `x`, `y`, `z`, `diagnosis`, `etric value`  
