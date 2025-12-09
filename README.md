@@ -109,7 +109,7 @@ Inside the Shiny sidebar, click:
 |-------------|------|---------------|----------------|
 | **Tina Zhao** | Psychology | Lead Developer | PLEASE ADD CONTRIBUTION |
 | **Carlos Pineda** | Pharmacy | Developer | Shiny UI design, node comparison engine, unit test for visualization |
-| **Hongyu Mu** | epartment of Statistics | Developer | PLEASE ADD CONTRIBUTION  |
+| **Hongyu Mu** | Statistics | Developer | Revise shiny code using real data, writing tests for data loading and summary statistics |
 | **Kenny Yi** | Biomedical Informatics and Medical Education | Developer | PLEASE ADD CONTRIBUTION |
 
 ---
