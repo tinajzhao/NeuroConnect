@@ -1,17 +1,8 @@
 """
 Tests for Brain Visualization Manager
 """
-
-import pytest
-import numpy as np
-import pandas as pd
-from pathlib import Path
-import tempfile
-import os
-
-import sys
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
-
+import plotly
+import plotly.graph_objects as go
 import pytest
 import numpy as np
 import pandas as pd
