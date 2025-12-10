@@ -15,16 +15,16 @@ sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
 # Import functions to test
 from neuroconnect.extract_coords import (  # pylint: disable=wrong-import-position
-    find_atlas,
-    voxel_to_mni,
-    extract_tract_coords,
-    extract_base_tracts,
-    get_tract_from_df,
     average_tract_coords,
     calculate_bcc,
-    calculate_full_cc,
     calculate_composite_tracts,
+    calculate_full_cc,
+    extract_base_tracts,
+    extract_tract_coords,
+    find_atlas,
+    get_tract_from_df,
     save_coordinates,
+    voxel_to_mni,
 )
 
 
