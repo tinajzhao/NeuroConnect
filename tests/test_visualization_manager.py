@@ -12,7 +12,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-import neuroconnect.app_shiny_neuroconnect as app  # pylint: disable=wrong-import-position
+import neuroconnect.visualization_manager as app  # pylint: disable=wrong-import-position
 
 
 # Unit tests (edge cases)
