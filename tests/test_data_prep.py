@@ -11,7 +11,7 @@ from src.neuroconnect.data_prep import (
     clean_data,
     compute_summary_statistics,
     format_output,
-    load_data
+    load_data,
 )
 
 # Fixtures for data setup
@@ -107,7 +107,8 @@ def test_clean_data_no_matches_edge():
     reviewer: 
     category: Edge Test
 
-    Purpose: Verify that clean_data returns an empty dataframe if there are no matches between the diagnosis and DTI data.
+    Purpose: Verify that clean_data returns an empty dataframe if there are no matches between 
+    the diagnosis and DTI data.
     """
     diag = pd.DataFrame({'LONIUID': ['1'], 'Group': ['AD']})
     dti = pd.DataFrame({'LONIUID': ['2'], 'Tract1': [0.5]})

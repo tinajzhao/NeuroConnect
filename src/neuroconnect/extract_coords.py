@@ -7,9 +7,10 @@ Output: jhu_coordinates.csv with coordinates for all tracts
 """
 import os
 from pathlib import Path
+
+import nibabel as nib
 import numpy as np
 import pandas as pd
-import nibabel as nib
 from sklearn.decomposition import PCA
 
 # 48 base tracts from JHU atlas (ROIs 1-48)
