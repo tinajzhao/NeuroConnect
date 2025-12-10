@@ -31,6 +31,7 @@ def clean_data(diagnosis_df, dti_df):
     
     # Merge data
     merged_df = pd.merge(diagnosis_df, dti_df, on='LONIUID', how='inner')
+    orig_len = len(merged_df)
     
     # Filter for AD and CN groups only
     if 'Group' in merged_df.columns:
@@ -39,8 +40,11 @@ def clean_data(diagnosis_df, dti_df):
     # Drop rows with missing values in critical columns
     # Assuming all columns are critical for now
     merged_df = merged_df.dropna()
+    clean_len = len(merged_df)
     
-    return merged_df
+    excluded = orig_len - clean_len
+    
+    return merged_df, excluded
 
 def compute_summary_statistics(cleaned_df):
     """
