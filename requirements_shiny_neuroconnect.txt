@@ -1,9 +1,0 @@
-shiny
-shinywidgets
-plotly
-pandas
-numpy
-nibabel
-templateflow
-scikit-image
-pytest
