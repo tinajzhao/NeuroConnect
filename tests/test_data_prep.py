@@ -2,9 +2,10 @@
 Tests for data preparation funcitons
 """
 
+import pytest
+
 import numpy as np
 import pandas as pd
-import pytest
 
 from src.neuroconnect.data_prep import (
     calc_group_diff,
