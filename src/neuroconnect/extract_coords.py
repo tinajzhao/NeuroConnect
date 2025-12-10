@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Component 2: Tract Coordinate Extraction
 Extracts start, end, and centroid coordinates for 53 JHU white matter tracts

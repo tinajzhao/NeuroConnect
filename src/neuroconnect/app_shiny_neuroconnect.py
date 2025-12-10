@@ -1,3 +1,11 @@
+"""
+Component 3: Brain Visualization Manager
+Reads CSVs for tract coordinates and DTI metrics to render neuroimaging visualizations
+
+Requirements: numpy, pandas, plotly, shiny, shinywidgets, optional(nibabel, skimage.measure, templateflow.api)
+Output: Shiny app visualization for data of interest
+"""
+
 import io
 from pathlib import Path
 
