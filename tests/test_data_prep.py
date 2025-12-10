@@ -42,7 +42,7 @@ def test_full_pipeline_smoke(mock_data_folder):
     assert not dti.empty
     
     # Clean
-    cleaned = clean_data(diag, dti)
+    cleaned, excluded = clean_data(diag, dti)
     # Expecting IDs 100 (AD), 101 (CN), 102 (AD). 
     # 103 is MCI (filtered out), 104 is in diag but not DTI, 105 in DTI but not diag.
     assert not cleaned.empty
@@ -102,7 +102,7 @@ def test_clean_data_no_matches_edge():
     diag = pd.DataFrame({'LONIUID': ['1'], 'Group': ['AD']})
     dti = pd.DataFrame({'LONIUID': ['2'], 'Tract1': [0.5]})
     
-    cleaned = clean_data(diag, dti)
+    cleaned, excluded = clean_data(diag, dti)
     assert cleaned.empty
     
     summary = compute_summary_statistics(cleaned)
