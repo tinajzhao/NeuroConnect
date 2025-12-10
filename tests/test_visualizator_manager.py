@@ -1,21 +1,12 @@
 """
 Tests for Brain Visualization Manager
 """
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import pytest
-
-import neuroconnect.app_shiny_neuroconnect as app
-import numpy as np
-import pandas as pd
-import plotly.graph_objects as go
-import pytest
+import src.neuroconnect.app_shiny_neuroconnect as app
 
 # Unit tests (edge cases)
 def test_normalize_columns_missing_required_raises():
