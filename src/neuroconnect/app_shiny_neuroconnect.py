@@ -80,9 +80,11 @@ def load_tract_data(clean_csv_path=None, coords_csv_path=None):
     """
     Load and merge clean.csv and jhu_coordinates.csv into node format.
     
-    :param clean_csv_path: Path to clean.csv (default: data/clean.csv)
-    :param coords_csv_path: Path to jhu_coordinates.csv (default: data/jhu_coordinates.csv)
-    :return: Dictionary with 'CN' and 'AD' keys, each containing DataFrame with x,y,z,id,group,value
+    :param clean_csv_path: Path to clean.csv(default: data/clean.csv)
+
+    :param coords_csv_path: Path to jhu_coordinates.csv(default: data/jhu_coordinates.csv)
+
+    :return: Dictionary with 'CN' and 'AD' keys, each containing DataFrame with x,y,z,id,group,value.
     """
     if clean_csv_path is None:
         clean_csv_path = Path(__file__).parent.parent.parent / 'data' / 'clean.csv'
@@ -222,15 +224,23 @@ def make_aoi_mesh_trace(x,y,z,r,opacity=0.12):
     Y=y+r*np.sin(u)*np.sin(v)
     Z=z+r*np.cos(u)
     pts=np.vstack([X.ravel(),Y.ravel(),Z.ravel()]).T
-    i,j,k=[],[],[]
-    def idx(ui,vi): return ui*30+vi
-    for ui in range(24):
-        for vi in range(29):
-            i+=[idx(ui,vi),idx(ui+1,vi)]
-            j+=[idx(ui+1,vi),idx(ui+1,vi+1)]
-            k+=[idx(ui,vi+1),idx(ui,vi+1)]
-    return go.Mesh3d(x=pts[:,0],y=pts[:,1],z=pts[:,2],i=i,j=j,k=k,
-                     name="AOI",opacity=opacity,flatshading=True,showscale=False,hoverinfo="skip")
+    i, j, k = [], [], []
+
+    # Rename 'ui' to 'u_idx' and 'vi' to 'v_idx' to avoid the conflict
+    def idx(u_idx, v_idx):
+        return u_idx * 30 + v_idx
+
+    for u_idx in range(24):
+        for v_idx in range(29):
+            # Update all usages inside the loop
+            i += [idx(u_idx, v_idx), idx(u_idx + 1, v_idx)]
+            j += [idx(u_idx + 1, v_idx), idx(u_idx + 1, v_idx + 1)]
+            k += [idx(u_idx, v_idx + 1), idx(u_idx, v_idx + 1)]
+
+    return go.Mesh3d(
+        x=pts[:, 0], y=pts[:, 1], z=pts[:, 2], i=i, j=j, k=k,
+        name="AOI", opacity=opacity, flatshading=True, showscale=False, hoverinfo="skip"
+    )
 
 # ---------------------------
 # Edges
@@ -238,13 +248,15 @@ def make_aoi_mesh_trace(x,y,z,r,opacity=0.12):
 def build_edges_knn(df: pd.DataFrame, k: int = 4, max_edges: int = 5000):
     pts = df[["x","y","z"]].to_numpy()
     n = len(pts)
-    if n == 0: return []
+    if n == 0: 
+        return []
     edges = set()
     for i in range(n):
         d = np.sqrt(((pts - pts[i])**2).sum(axis=1))
         idx = np.argpartition(d, k+1)[:k+1]  # include self
         for j in idx:
-            if i == j: continue
+            if i == j: 
+                continue
             a, b = (i, j) if i < j else (j, i)
             edges.add((a, b))
         if len(edges) > max_edges:
@@ -321,7 +333,13 @@ app_ui = ui.page_sidebar(
         ui.input_slider("edge_max","Max edges (cap)",100,20000,5000, step=100),
         ui.hr(),
         ui.h4("Surface & View"),
-        ui.input_select("surface_mode","Brain surface",["Ellipsoid (fast)","MNI realistic (requires neuro libs)"],selected="Ellipsoid (fast)"),
+        ui.input_select(
+            "surface_mode",
+            "Brain surface",
+            ["Ellipsoid (fast)",
+            "MNI realistic (requires neuro libs)"],
+            selected="Ellipsoid (fast)"
+        ),
         ui.input_slider("surface_step","MNI surface step (MNI only)",1,5,2),
         ui.input_select("camera","Camera view",list(CAMERAS.keys()),selected="isometric"),
         ui.input_switch("sync_cam","Sync camera for both", True),
@@ -434,9 +452,19 @@ def server(input, output, session):
         mode = input.surface_mode()
         if mode == "MNI realistic (requires neuro libs)":
             if not HAVE_NEURO:
-                return make_ellipsoid_traces(0.12), "Ellipsoid (install nibabel, templateflow, scikit-image for MNI surface)"
+                return (
+                    make_ellipsoid_traces(0.12), 
+                    "Ellipsoid (install nibabel, templateflow, scikit-image for MNI surface)"
+                )
             try:
-                return [make_mni_surface_trace(isovalue=0.5, step_size=int(input.surface_step()), opacity=0.15)], "MNI Realistic Surface"
+                return (
+                    [make_mni_surface_trace(
+                        isovalue=0.5, 
+                        step_size=int(input.surface_step()),
+                        opacity=0.15
+                    )], 
+                    "MNI Realistic Surface"
+                )
             except Exception as e:
                 return make_ellipsoid_traces(0.12), f"Ellipsoid (MNI surface error: {e})"
         else:
@@ -521,7 +549,11 @@ def server(input, output, session):
         add_edges_if_needed(traces, df)
         add_nodes(traces, df, tag)
         fig = go.Figure(traces)
-        fig.update_layout(title=f"{tag} — {surf_label}", scene=dict(aspectmode="data"), legend=dict(itemsizing="constant"))
+        fig.update_layout(
+            title=f"{tag} — {surf_label}", 
+            scene=dict(aspectmode="data"), 
+            legend=dict(itemsizing="constant")
+        )
         return fig
 
     # --------- Differences view helpers ---------
@@ -597,7 +629,11 @@ def server(input, output, session):
                     symbol=symbol if symbol else "circle"
                 ),
                 name=name,
-                text=[f"{r.id} | Δ {getattr(r,'value_diff'):.3f}" if not np.isnan(getattr(r,'value_diff')) else f"{r.id} | Δ N/A" for r in sub.itertuples(index=False)],
+                text=[
+                    f"{r.id} | Δ {getattr(r,'value_diff'):.3f}" 
+                    if not np.isnan(getattr(r,'value_diff', np.nan)) else f"{r.id} | Δ N/A" 
+                    for r in sub.itertuples(index=False)
+                ],
                 hoverinfo="text"
             ))
 

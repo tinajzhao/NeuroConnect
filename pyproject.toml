@@ -36,6 +36,8 @@ dependencies = [
 Homepage = "https://github.com/tinajzhao/NeuroConnect"
 Issues = "https://github.com/tinajzhao/NeuroConnect/issues"
 
+[tool.ruff]
+line-length = 120
 
 [tool.ruff.lint]
 select = [
