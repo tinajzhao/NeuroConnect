@@ -2,9 +2,6 @@
 Tests for data preparation funcitons
 """
 
-import pytest
-import pandas as pd
-import numpy as np
 from src.neuroconnect.data_prep import ( # pylint: disable=wrong-import-position
     load_data,
     clean_data,
@@ -12,6 +9,9 @@ from src.neuroconnect.data_prep import ( # pylint: disable=wrong-import-position
     format_output,
     calc_group_diff,
 )
+import numpy as np
+import pandas as pd
+import pytest
 
 # Fixtures for data setup
 @pytest.fixture

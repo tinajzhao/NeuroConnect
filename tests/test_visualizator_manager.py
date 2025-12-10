@@ -2,13 +2,14 @@
 Tests for Brain Visualization Manager
 """
 import sys
-import plotly.graph_objects as go
-import pytest
-import numpy as np
-import pandas as pd
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
+
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+import pytest
 
 import neuroconnect.app_shiny_neuroconnect as app
 
