@@ -1,16 +1,17 @@
-
-from shiny import App, ui, render, reactive
-from shinywidgets import output_widget, render_plotly
-import plotly.graph_objects as go
-import pandas as pd
-import numpy as np
 import io
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+from shiny import App, reactive, render, ui
+from shinywidgets import output_widget, render_plotly
 
 # Optional heavy deps for realistic MNI surface
 try:
     import nibabel as nib
-    from templateflow.api import get as tflow_get
     from skimage.measure import marching_cubes
+    from templateflow.api import get as tflow_get
     HAVE_NEURO = True
 except Exception:
     HAVE_NEURO = False
@@ -47,13 +48,23 @@ def normalize_columns(df):
     for r in required:
         if r not in cols:
             raise ValueError(f"Missing required column: {r}")
-    df = df.rename(columns={cols["x"]:"x", cols["y"]:"y", cols["z"]:"z"})
-    if "id" in cols: df = df.rename(columns={cols["id"]:"id"})
-    else: df["id"] = [f"node_{i}" for i in range(len(df))]
-    if "group" in cols: df = df.rename(columns={cols["group"]:"group"})
-    else: df["group"] = "1"
-    if "value" in cols: df = df.rename(columns={cols["value"]:"value"})
-    return df.dropna(subset=["x","y","z"]).reset_index(drop=True)
+    
+    df = df.rename(columns={cols["x"]: "x", cols["y"]: "y", cols["z"]: "z"})
+
+    if "id" in cols:
+        df = df.rename(columns={cols["id"]: "id"})
+    else:
+        df["id"] = [f"node_{i}" for i in range(len(df))]
+
+    if "group" in cols:
+        df = df.rename(columns={cols["group"]: "group"})
+    else:
+        df["group"] = "1"
+
+    if "value" in cols:
+        df = df.rename(columns={cols["value"]: "value"})
+
+    return df.dropna(subset=["x", "y", "z"]).reset_index(drop=True)
 
 def mark_nearest(nodes_df, targets_xyz, radius_mm=8.0):
     pts = nodes_df[["x","y","z"]].to_numpy()
@@ -64,6 +75,58 @@ def mark_nearest(nodes_df, targets_xyz, radius_mm=8.0):
     nodes_df = nodes_df.copy()
     nodes_df["selected"] = nodes_df.get("selected", False) | sel
     return nodes_df
+
+def load_tract_data(clean_csv_path=None, coords_csv_path=None):
+    """
+    Load and merge clean.csv and jhu_coordinates.csv into node format.
+    
+    :param clean_csv_path: Path to clean.csv(default: data/clean.csv)
+
+    :param coords_csv_path: Path to jhu_coordinates.csv(default: data/jhu_coordinates.csv)
+
+    :return: Dictionary with 'CN' and 'AD' keys, each containing DataFrame with x,y,z,id,group,value.
+    """
+    if clean_csv_path is None:
+        clean_csv_path = Path(__file__).parent.parent.parent / 'data' / 'clean.csv'
+    if coords_csv_path is None:
+        coords_csv_path = Path(__file__).parent.parent.parent / 'data' / 'jhu_coordinates.csv'
+    
+    clean_df = pd.read_csv(clean_csv_path)
+    coords_df = pd.read_csv(coords_csv_path)
+    
+    # Get tract columns (exclude diagnosis)
+    tract_cols = [c for c in clean_df.columns if c != 'diagnosis']
+    
+    results = {}
+    for diagnosis in clean_df['diagnosis'].unique():
+        diag_row = clean_df[clean_df['diagnosis'] == diagnosis].iloc[0]
+        nodes = []
+        
+        for tract_name in tract_cols:
+            value = diag_row[tract_name]
+            if pd.isna(value):
+                continue
+            
+            # Match tract name in coordinates (handle exact match or variations)
+            coord_match = coords_df[coords_df['roi'] == tract_name]
+            if len(coord_match) == 0:
+                # Try case-insensitive match
+                coord_match = coords_df[coords_df['roi'].str.upper() == tract_name.upper()]
+            
+            if len(coord_match) > 0:
+                coord_row = coord_match.iloc[0]
+                nodes.append({
+                    'id': tract_name,
+                    'x': coord_row['centroid_x'],
+                    'y': coord_row['centroid_y'],
+                    'z': coord_row['centroid_z'],
+                    'group': '1',  # Can be customized later
+                    'value': float(value)
+                })
+        
+        results[diagnosis] = pd.DataFrame(nodes)
+    
+    return results
 
 # ---------------------------
 # Surface helpers
@@ -80,13 +143,21 @@ def ellipsoid_mesh(rx, ry, rz, side="both", u_steps=40, v_steps=40):
         x,y,z = np.where(mask,x,np.nan),np.where(mask,y,np.nan),np.where(mask,z,np.nan)
     pts = np.vstack([x.ravel(), y.ravel(), z.ravel()]).T
     i,j,k=[],[],[]
-    def idx(ui,vi): return ui*v_steps+vi
-    for ui in range(u_steps-1):
-        for vi in range(v_steps-1):
-            if not (np.isnan(x[ui,vi]) or np.isnan(x[ui+1,vi]) or np.isnan(x[ui,vi+1]) or np.isnan(x[ui+1,vi+1])):
-                i += [idx(ui,vi), idx(ui+1,vi)]
-                j += [idx(ui+1,vi), idx(ui+1,vi+1)]
-                k += [idx(ui,vi+1), idx(ui,vi+1)]
+    def idx(u_idx, v_idx):
+        return u_idx * v_steps + v_idx
+
+    for u_idx in range(u_steps - 1):
+        for v_idx in range(v_steps - 1):
+            # Check for NaNs in the quad
+            if not (
+                np.isnan(x[u_idx, v_idx])
+                or np.isnan(x[u_idx + 1, v_idx])
+                or np.isnan(x[u_idx, v_idx + 1])
+                or np.isnan(x[u_idx + 1, v_idx + 1])
+            ):
+                i += [idx(u_idx, v_idx), idx(u_idx + 1, v_idx)]
+                j += [idx(u_idx + 1, v_idx), idx(u_idx + 1, v_idx + 1)]
+                k += [idx(u_idx,v_idx+1), idx(u_idx,v_idx+1)]
     return pts,i,j,k
 
 def make_ellipsoid_traces(opacity=0.15):
@@ -100,9 +171,26 @@ def make_ellipsoid_traces(opacity=0.15):
 
 def load_mni_mask_path():
     candidates = [
-        dict(template="MNI152NLin2009cAsym", desc="brain", resolution=1, suffix="mask", extension="nii.gz"),
-        dict(template="MNI152NLin2009cAsym", desc="brain", resolution=2, suffix="mask", extension="nii.gz"),
-        dict(template="MNI152NLin2009cAsym", resolution=1, suffix="mask", extension="nii.gz"),
+        dict(
+            template="MNI152NLin2009cAsym",
+            desc="brain",
+            resolution=1,
+            suffix="mask",
+            extension="nii.gz",
+        ),
+        dict(
+            template="MNI152NLin2009cAsym",
+            desc="brain",
+            resolution=2,
+            suffix="mask",
+            extension="nii.gz",
+        ),
+        dict(
+            template="MNI152NLin2009cAsym",
+            resolution=1,
+            suffix="mask",
+            extension="nii.gz",
+        ),
     ]
     for kw in candidates:
         try:
@@ -136,15 +224,23 @@ def make_aoi_mesh_trace(x,y,z,r,opacity=0.12):
     Y=y+r*np.sin(u)*np.sin(v)
     Z=z+r*np.cos(u)
     pts=np.vstack([X.ravel(),Y.ravel(),Z.ravel()]).T
-    i,j,k=[],[],[]
-    def idx(ui,vi): return ui*30+vi
-    for ui in range(24):
-        for vi in range(29):
-            i+=[idx(ui,vi),idx(ui+1,vi)]
-            j+=[idx(ui+1,vi),idx(ui+1,vi+1)]
-            k+=[idx(ui,vi+1),idx(ui,vi+1)]
-    return go.Mesh3d(x=pts[:,0],y=pts[:,1],z=pts[:,2],i=i,j=j,k=k,
-                     name="AOI",opacity=opacity,flatshading=True,showscale=False,hoverinfo="skip")
+    i, j, k = [], [], []
+
+    # Rename 'ui' to 'u_idx' and 'vi' to 'v_idx' to avoid the conflict
+    def idx(u_idx, v_idx):
+        return u_idx * 30 + v_idx
+
+    for u_idx in range(24):
+        for v_idx in range(29):
+            # Update all usages inside the loop
+            i += [idx(u_idx, v_idx), idx(u_idx + 1, v_idx)]
+            j += [idx(u_idx + 1, v_idx), idx(u_idx + 1, v_idx + 1)]
+            k += [idx(u_idx, v_idx + 1), idx(u_idx, v_idx + 1)]
+
+    return go.Mesh3d(
+        x=pts[:, 0], y=pts[:, 1], z=pts[:, 2], i=i, j=j, k=k,
+        name="AOI", opacity=opacity, flatshading=True, showscale=False, hoverinfo="skip"
+    )
 
 # ---------------------------
 # Edges
@@ -152,13 +248,15 @@ def make_aoi_mesh_trace(x,y,z,r,opacity=0.12):
 def build_edges_knn(df: pd.DataFrame, k: int = 4, max_edges: int = 5000):
     pts = df[["x","y","z"]].to_numpy()
     n = len(pts)
-    if n == 0: return []
+    if n == 0: 
+        return []
     edges = set()
     for i in range(n):
         d = np.sqrt(((pts - pts[i])**2).sum(axis=1))
         idx = np.argpartition(d, k+1)[:k+1]  # include self
         for j in idx:
-            if i == j: continue
+            if i == j: 
+                continue
             a, b = (i, j) if i < j else (j, i)
             edges.add((a, b))
         if len(edges) > max_edges:
@@ -208,9 +306,13 @@ app_ui = ui.page_sidebar(
         ui.input_file("csvB","AD CSV (x,y,z[,id,group,value])",accept=[".csv"]),
         ui.input_action_button("demoA","Use demo (CN)"),
         ui.input_action_button("demoB","Use demo (AD)"),
+        ui.input_action_button("load_tract_data","Load tract data (CN/AD)"),
         ui.hr(),
         ui.h4("View mode"),
-        ui.input_select("view_mode", "Mode", ["Side-by-side", "Brain differences"], selected="Side-by-side"),
+        ui.input_select(
+            "view_mode", "Mode", ["Side-by-side", "Brain differences"], 
+            selected="Side-by-side"
+        ),
         ui.hr(),
         ui.h4("Highlighting & AOI"),
         ui.input_text("ids","IDs to highlight",""),
@@ -231,7 +333,13 @@ app_ui = ui.page_sidebar(
         ui.input_slider("edge_max","Max edges (cap)",100,20000,5000, step=100),
         ui.hr(),
         ui.h4("Surface & View"),
-        ui.input_select("surface_mode","Brain surface",["Ellipsoid (fast)","MNI realistic (requires neuro libs)"],selected="Ellipsoid (fast)"),
+        ui.input_select(
+            "surface_mode",
+            "Brain surface",
+            ["Ellipsoid (fast)",
+            "MNI realistic (requires neuro libs)"],
+            selected="Ellipsoid (fast)"
+        ),
         ui.input_slider("surface_step","MNI surface step (MNI only)",1,5,2),
         ui.input_select("camera","Camera view",list(CAMERAS.keys()),selected="isometric"),
         ui.input_switch("sync_cam","Sync camera for both", True),
@@ -274,16 +382,32 @@ app_ui = ui.page_sidebar(
 def server(input, output, session):
     demoA = reactive.Value(False)
     demoB = reactive.Value(False)
+    use_tract_data = reactive.Value(False)
+    tract_data_cache = reactive.Value(None)
+
+    @reactive.Effect
+    @reactive.event(input.load_tract_data)
+    def _load_tract_data():
+        try:
+            data = load_tract_data()
+            tract_data_cache.set(data)
+            use_tract_data.set(True)
+            demoA.set(False)
+            demoB.set(False)
+        except Exception as e:
+            print(f"Error loading tract data: {e}")
 
     @reactive.Effect
     @reactive.event(input.demoA)
     def _demoA():
         demoA.set(True)
+        use_tract_data.set(False)
 
     @reactive.Effect
     @reactive.event(input.demoB)
     def _demoB():
         demoB.set(True)
+        use_tract_data.set(False)
 
     def prepare_nodes(raw_df: pd.DataFrame) -> pd.DataFrame:
         df = normalize_columns(raw_df)
@@ -298,7 +422,11 @@ def server(input, output, session):
 
     @reactive.Calc
     def df_A():
-        if input.csvA() and not demoA.get():
+        if use_tract_data.get() and tract_data_cache.get() is not None:
+            data = tract_data_cache.get()
+            if 'CN' in data:
+                return prepare_nodes(data['CN'])
+        if input.csvA() and not demoA.get() and not use_tract_data.get():
             file = input.csvA()[0]
             raw = pd.read_csv(io.BytesIO(file.read()))
             return prepare_nodes(raw)
@@ -307,7 +435,11 @@ def server(input, output, session):
 
     @reactive.Calc
     def df_B():
-        if input.csvB() and not demoB.get():
+        if use_tract_data.get() and tract_data_cache.get() is not None:
+            data = tract_data_cache.get()
+            if 'AD' in data:
+                return prepare_nodes(data['AD'])
+        if input.csvB() and not demoB.get() and not use_tract_data.get():
             file = input.csvB()[0]
             raw = pd.read_csv(io.BytesIO(file.read()))
             return prepare_nodes(raw)
@@ -320,9 +452,19 @@ def server(input, output, session):
         mode = input.surface_mode()
         if mode == "MNI realistic (requires neuro libs)":
             if not HAVE_NEURO:
-                return make_ellipsoid_traces(0.12), "Ellipsoid (install nibabel, templateflow, scikit-image for MNI surface)"
+                return (
+                    make_ellipsoid_traces(0.12), 
+                    "Ellipsoid (install nibabel, templateflow, scikit-image for MNI surface)"
+                )
             try:
-                return [make_mni_surface_trace(isovalue=0.5, step_size=int(input.surface_step()), opacity=0.15)], "MNI Realistic Surface"
+                return (
+                    [make_mni_surface_trace(
+                        isovalue=0.5, 
+                        step_size=int(input.surface_step()),
+                        opacity=0.15
+                    )], 
+                    "MNI Realistic Surface"
+                )
             except Exception as e:
                 return make_ellipsoid_traces(0.12), f"Ellipsoid (MNI surface error: {e})"
         else:
@@ -332,9 +474,17 @@ def server(input, output, session):
         if input.edge_mode() == "off" or len(df) < 2:
             return
         if input.edge_mode() == "kNN":
-            edges = build_edges_knn(df, k=int(input.edge_k()), max_edges=int(input.edge_max()))
+            edges = build_edges_knn(
+                df, 
+                k=int(input.edge_k()), 
+                max_edges=int(input.edge_max())
+            )
         else:
-            edges = build_edges_distance(df, max_dist=float(input.edge_maxdist()), max_edges=int(input.edge_max()))
+            edges = build_edges_distance(
+                df, 
+                max_dist=float(input.edge_maxdist()), 
+                max_edges=int(input.edge_max())
+            )
         if edges:
             xs, ys, zs = edges_to_plotly_lines(df, edges)
             traces.append(go.Scatter3d(
@@ -358,22 +508,38 @@ def server(input, output, session):
         hi_mask = df["selected"].to_numpy()
         lo_mask = ~hi_mask
 
+        def _get_hover_text(sub_df):
+            texts = []
+            for r in sub_df.itertuples(index=False):
+                txt = f"{r.id} | group {r.group}"
+                if hasattr(r, "value"):
+                    txt += f" | value {getattr(r, 'value'):.3f}"
+                texts.append(txt)
+            return texts
+
         if lo_mask.any():
             lo = df[lo_mask]
             traces.append(go.Scatter3d(
                 x=lo["x"], y=lo["y"], z=lo["z"], mode="markers",
-                marker=dict(size=sizes[lo_mask].astype(float), opacity=alpha),
+                marker=dict(
+                    size=sizes[lo_mask].astype(float), 
+                    opacity=alpha
+                ),
                 name=f"{tag}Nodes",
-                text=[f"{r.id} | group {r.group}" + (f" | value {getattr(r,'value'):.3f}" if hasattr(r,'value') else "") for r in lo.itertuples(index=False)],
+                text=_get_hover_text(lo),
                 hoverinfo="text"
             ))
         if hi_mask.any():
             hi = df[hi_mask]
             traces.append(go.Scatter3d(
                 x=hi["x"], y=hi["y"], z=hi["z"], mode="markers",
-                marker=dict(size=(sizes[hi_mask] + 3).astype(float), symbol="diamond", opacity=1.0),
+                marker=dict(
+                    size=(sizes[hi_mask] + 3).astype(float), 
+                    symbol="diamond", 
+                    opacity=1.0
+                ),
                 name=f"{tag}Highlighted",
-                text=[f"{r.id} | group {r.group}" + (f" | value {getattr(r,'value'):.3f}" if hasattr(r,'value') else "") for r in hi.itertuples(index=False)],
+                text=_get_hover_text(hi),
                 hoverinfo="text"
             ))
 
@@ -383,7 +549,11 @@ def server(input, output, session):
         add_edges_if_needed(traces, df)
         add_nodes(traces, df, tag)
         fig = go.Figure(traces)
-        fig.update_layout(title=f"{tag} — {surf_label}", scene=dict(aspectmode="data"), legend=dict(itemsizing="constant"))
+        fig.update_layout(
+            title=f"{tag} — {surf_label}", 
+            scene=dict(aspectmode="data"), 
+            legend=dict(itemsizing="constant")
+        )
         return fig
 
     # --------- Differences view helpers ---------
@@ -393,8 +563,11 @@ def server(input, output, session):
         B = df_B().copy()
         # Merge by id; keep positions (x,y,z) from A where available, else from B.
         keep = ["id","x","y","z","value","group"]
-        A2 = A[[c for c in keep if c in A.columns]].rename(columns={c: f"{c}_A" for c in keep if c!="id"})
-        B2 = B[[c for c in keep if c in B.columns]].rename(columns={c: f"{c}_B" for c in keep if c!="id"})
+        cols_A = [c for c in keep if c in A.columns]
+        A2 = A[cols_A].rename(columns={c: f"{c}_A" for c in keep if c != "id"})
+
+        cols_B = [c for c in keep if c in B.columns]
+        B2 = B[cols_B].rename(columns={c: f"{c}_B" for c in cols_B if c != "id"})
         m = pd.merge(A2, B2, on="id", how="outer", indicator=True)
 
         # Coordinates: prefer A else B
@@ -456,7 +629,11 @@ def server(input, output, session):
                     symbol=symbol if symbol else "circle"
                 ),
                 name=name,
-                text=[f"{r.id} | Δ {getattr(r,'value_diff'):.3f}" if not np.isnan(getattr(r,'value_diff')) else f"{r.id} | Δ N/A" for r in sub.itertuples(index=False)],
+                text=[
+                    f"{r.id} | Δ {getattr(r,'value_diff'):.3f}" 
+                    if not np.isnan(getattr(r,'value_diff', np.nan)) else f"{r.id} | Δ N/A" 
+                    for r in sub.itertuples(index=False)
+                ],
                 hoverinfo="text"
             ))
 
