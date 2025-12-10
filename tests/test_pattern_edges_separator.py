@@ -1,10 +1,10 @@
+import sys
 
 import numpy as np
 import pandas as pd
-import sys
 
 sys.path.append(".")
-import app_shiny_neuroconnect as app
+import src.neuroconnect.app_shiny_neuroconnect as app
 
 def test_edges_to_plotly_lines_pattern_and_values():
     """

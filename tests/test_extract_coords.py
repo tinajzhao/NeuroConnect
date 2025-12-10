@@ -1,15 +1,12 @@
 """
 Tests for tract coordinate extraction functions
 """
+import sys
+from pathlib import Path
 
-import pytest
 import numpy as np
 import pandas as pd
-from pathlib import Path
-import tempfile
-import os
 
-import sys
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
 # Import functions to test

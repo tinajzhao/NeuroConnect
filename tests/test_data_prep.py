@@ -1,6 +1,7 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 import pytest
+
 from src.neuroconnect.data_prep import (
     calc_group_diff,
     clean_data,

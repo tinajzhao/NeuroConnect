@@ -7,12 +7,13 @@ Requirements: FSL (>=5.0, optional), numpy, pandas, nibabel, scikit-learn
 Output: jhu_coordinates.csv with coordinates for all tracts
 """
 
+import os
+from pathlib import Path
+
+import nibabel as nib
 import numpy as np
 import pandas as pd
-import nibabel as nib
 from sklearn.decomposition import PCA
-from pathlib import Path
-import os
 
 # 48 base tracts from JHU atlas (ROIs 1-48)
 base_tracts = [

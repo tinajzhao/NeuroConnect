@@ -1,16 +1,13 @@
 """
 Tests for Component 2: extract_coords; calculation part
 """
-
-import pytest
-import numpy as np
-import pandas as pd
+import sys
 from pathlib import Path
-import tempfile
 import os
+import tempfile
+import pandas as pd
 
 # Import functions from your script
-import sys
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
 from neuroconnect.extract_coords import (

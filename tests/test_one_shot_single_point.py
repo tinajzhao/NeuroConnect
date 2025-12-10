@@ -1,9 +1,9 @@
-
-import pandas as pd
 import sys
 
+import pandas as pd
+
 sys.path.append(".")
-import app_shiny_neuroconnect as app
+import src.neuroconnect.app_shiny_neuroconnect as app
 
 def test_one_shot_single_point_has_no_edges():
     """

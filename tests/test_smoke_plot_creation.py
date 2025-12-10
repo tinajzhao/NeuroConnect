@@ -1,11 +1,9 @@
-
-import plotly.graph_objects as go
-import numpy as np
-import pandas as pd
 import sys
 
+import plotly.graph_objects as go
+
 sys.path.append(".")
-import app_shiny_neuroconnect as app
+import src.neuroconnect.app_shiny_neuroconnect as app
 
 def test_smoke_minimal_figure_builds():
     """

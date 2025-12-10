@@ -1,11 +1,11 @@
+import sys
 
 import numpy as np
 import pandas as pd
 import pytest
-import sys
 
 sys.path.append(".")
-import app_shiny_neuroconnect as app
+import src.neuroconnect.app_shiny_neuroconnect as app
 
 def test_normalize_columns_missing_required_raises():
     """
