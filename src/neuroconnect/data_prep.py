@@ -6,8 +6,10 @@ Requirements: pandas
 Output: clean.csv with filtered data by diagnosis (e.g. AD, CN)
 """
 
-import pandas as pd
 import os
+
+import pandas as pd
+
 
 def load_data(data_folder):
     """

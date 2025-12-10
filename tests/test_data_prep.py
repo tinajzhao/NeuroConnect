@@ -2,11 +2,17 @@
 Tests for data preparation funcitons
 """
 
-import pytest
 import pandas as pd
+import pytest
 import numpy as np
-import os
-from src.neuroconnect.data_prep import load_data, clean_data, compute_summary_statistics, format_output, calc_group_diff
+
+from src.neuroconnect.data_prep import (
+    calc_group_diff,
+    clean_data,
+    compute_summary_statistics,
+    format_output,
+    load_data
+)
 
 # Fixtures for data setup
 @pytest.fixture
