@@ -51,7 +51,7 @@ venv\Scripts\activate     # Windows
 ### 2. Install dependencies
 
 ```bash
-pip install -r requirements_shiny_neuroconnect.txt
+pip install -r requirements.txt
 ```
 
 To enable realistic MNI brain surface rendering (optional):
@@ -68,7 +68,7 @@ pip install nibabel templateflow scikit-image
 Run locally:
 
 ```bash
-shiny run --reload neuroconnect_app.py
+shiny run --reload src/neuroconnect/visualization_manager.py
 ```
 
 You can then load:
