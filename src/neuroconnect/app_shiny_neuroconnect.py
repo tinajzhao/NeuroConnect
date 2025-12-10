@@ -246,21 +246,30 @@ def make_aoi_mesh_trace(x,y,z,r,opacity=0.12):
 # Edges
 # ---------------------------
 def build_edges_knn(df: pd.DataFrame, k: int = 4, max_edges: int = 5000):
-    pts = df[["x","y","z"]].to_numpy()
+    pts = df[["x", "y", "z"]].to_numpy()
     n = len(pts)
-    if n == 0: 
+    if n == 0:
         return []
+
     edges = set()
     for i in range(n):
-        d = np.sqrt(((pts - pts[i])**2).sum(axis=1))
-        idx = np.argpartition(d, k+1)[:k+1]  # include self
+        d = np.sqrt(((pts - pts[i]) ** 2).sum(axis=1))
+
+        # We want up to k neighbours + self, but cannot exceed n points total.
+        # For NumPy argpartition, kth must be in [0, len(d)-1].
+        m = min(k + 1, n)        # total indices to keep (including self)
+        kth = m - 1              # last index to partition on
+        idx = np.argpartition(d, kth)[:m]
+
         for j in idx:
-            if i == j: 
-                continue
+            if i == j:
+                continue  # skip self
             a, b = (i, j) if i < j else (j, i)
             edges.add((a, b))
-        if len(edges) > max_edges:
+
+        if len(edges) >= max_edges:
             break
+
     return list(edges)
 
 def build_edges_distance(df: pd.DataFrame, max_dist: float = 25.0, max_edges: int = 10000):

@@ -1,0 +1,11 @@
+nibabel
+numpy
+pandas
+plotly
+pytest
+pytest-cov
+scikit-image
+scikit-learn
+shiny
+shinywidgets
+templateflow
