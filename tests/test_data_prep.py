@@ -1,8 +1,13 @@
-import pytest
 import pandas as pd
 import numpy as np
-import os
-from src.neuroconnect.data_prep import load_data, clean_data, compute_summary_statistics, format_output, calc_group_diff
+import pytest
+from src.neuroconnect.data_prep import (
+    calc_group_diff,
+    clean_data,
+    compute_summary_statistics,
+    format_output,
+    load_data,
+)
 
 # Fixtures for data setup
 @pytest.fixture
@@ -31,7 +36,7 @@ def mock_data_folder(tmp_path):
 def test_full_pipeline_smoke(mock_data_folder):
     """
     author: Hongyu
-    reviewer: 
+    reviewer: Kenny
     category: Smoke Test
 
     Purpose: Verify that the full pipeline runs from loading to formatting without errors.
@@ -65,7 +70,7 @@ def test_full_pipeline_smoke(mock_data_folder):
 def test_compute_summary_statistics_one_shot():
     """
     author: Hongyu
-    reviewer: 
+    reviewer: Kenny
     category: One-Shot Test
 
     Purpose: Verify that compute_summary_statistics produces the exact expected mean values
@@ -94,10 +99,10 @@ def test_compute_summary_statistics_one_shot():
 def test_clean_data_no_matches_edge():
     """
     author: Hongyu
-    reviewer: 
+    reviewer: Kenny
     category: Edge Test
 
-    Purpose: Verify that clean_data returns an empty dataframe if there are no matches between the diagnosis and DTI data.
+    Purpose: check if function returns an empty dataframe if there are no matches between the diagnosis and DTI data.
     """
     diag = pd.DataFrame({'LONIUID': ['1'], 'Group': ['AD']})
     dti = pd.DataFrame({'LONIUID': ['2'], 'Tract1': [0.5]})
@@ -115,7 +120,7 @@ def test_clean_data_no_matches_edge():
 def test_summary_stats_pattern_invariance():
     """
     author: Hongyu
-    reviewer: 
+    reviewer: Kenny
     category: Pattern Test
 
     Purpose: Verify that duplicating the dataset should not change the mean values.
@@ -147,7 +152,7 @@ def test_summary_stats_pattern_invariance():
 def test_calc_group_diff_smoke():
     """
     author: Kenny
-    reviewer: 
+    reviewer: Hongyu
     category: smoke test
     justification: check if function runs
     """
@@ -163,7 +168,7 @@ def test_calc_group_diff_smoke():
 def test_calc_group_diff_oneshot():
     """
     author: Kenny
-    reviewer: 
+    reviewer: Hongyu
     category: one-shot test
     justification: check if function outputs expected result
     """
@@ -182,7 +187,7 @@ def test_calc_group_diff_oneshot():
 def test_calc_group_diff_edge():
     """
     author: Kenny
-    reviewer: 
+    reviewer: Hongyu
     category: edge test
     justification: check if function handles error for invalid difference_type input
     """
@@ -199,7 +204,7 @@ def test_calc_group_diff_edge():
 def test_calc_group_diff_pattern():
     """
     author: Kenny
-    reviewer: 
+    reviewer: Hongyu
     category: pattern test
     justification: check if output for groups with identical values is as expected
     """
