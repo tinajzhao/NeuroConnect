@@ -1,5 +1,15 @@
+"""
+Component 1: Data Preparation
+Extracts, cleans, and merges diagnosis and DTI data from CSV files 
+
+Requirements: pandas
+Output: clean.csv with filtered data by diagnosis (e.g. AD, CN)
+"""
+
 import os
+
 import pandas as pd
+
 
 def load_data(data_folder):
     """
@@ -55,7 +65,8 @@ def compute_summary_statistics(cleaned_df):
 
     # Identify tract columns (numeric columns excluding metadata)
     metadata_cols = ['LONIUID', 'Group', 'EXAMDATE', 'STATUS', 'id']
-    tract_cols = [c for c in cleaned_df.columns if c not in metadata_cols and pd.api.types.is_numeric_dtype(cleaned_df[c])]
+    tract_cols = [c for c in cleaned_df.columns if c not in metadata_cols and 
+                  pd.api.types.is_numeric_dtype(cleaned_df[c])]
     
     if not tract_cols:
         return pd.DataFrame()

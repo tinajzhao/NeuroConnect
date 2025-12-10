@@ -12,6 +12,10 @@ import plotly.graph_objects as go
 import pytest
 
 import neuroconnect.app_shiny_neuroconnect as app
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+import pytest
 
 # Unit tests (edge cases)
 def test_normalize_columns_missing_required_raises():
