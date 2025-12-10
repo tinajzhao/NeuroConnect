@@ -1,3 +1,11 @@
+"""
+Component 1: Data Preparation
+Extracts, cleans, and merges diagnosis and DTI data from CSV files 
+
+Requirements: pandas
+Output: clean.csv with filtered data by diagnosis (e.g. AD, CN)
+"""
+
 import pandas as pd
 import os
 
