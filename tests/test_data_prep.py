@@ -1,8 +1,13 @@
 import pytest
 import pandas as pd
 import numpy as np
-import os
-from src.neuroconnect.data_prep import load_data, clean_data, compute_summary_statistics, format_output, calc_group_diff
+from src.neuroconnect.data_prep import ( # pylint: disable=wrong-import-position
+    load_data,
+    clean_data,
+    compute_summary_statistics,
+    format_output,
+    calc_group_diff,
+)
 
 # Fixtures for data setup
 @pytest.fixture
