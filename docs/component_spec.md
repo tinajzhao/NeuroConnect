@@ -1,8 +1,41 @@
 # Component Specification
 
+## Table of Contents
+- [Software Components](#software-components)
+  - [Component 1: Data Preparation](#component-1-data-preparation)
+  - [Component 2: Tract Coordinate Extraction](#component-2-tract-coordinate-extraction)
+  - [Component 3: Brain Visualization Manager](#component-3-brain-visualization-manager)
+- [Interactions](#interactions)
+- [Preliminary Plan](#preliminary-plan)
+
+---
+
 ## Software Components
 
 ### Component 1: Data Preparation
+
+**High-level Description:**  
+The Data Preparation component processes raw ADNI DTI data and diagnostic information into clean, analysis-ready formats. 
+
+**What it does:**
+- Loads and validates CSV files containing diagnosis and DTI data
+- Merges datasets on participant ID
+- Filters for CN and AD diagnostic groups
+- Removes participants with missing data
+- Calculates mean FA/MD values per tract for each diagnostic group
+- Computes group differences for difference map visualizations
+- Exports cleaned and summarized data
+
+**Inputs:**
+- `All_Subjects_Study_Entry_diagnosis.csv`: Participant IDs and diagnostic labels (CN/MCI/AD)
+- `All_Subjects_DTIROI_MEAN.csv`: Tract-level DTI metrics (FA, MD, RD, AD) for all participants
+
+**Outputs:**
+- `clean.csv`: Merged dataset with complete cases only
+- `summary_stats.csv`: Group-level mean values for each tract
+- Console feedback on data quality and filtering
+
+---
 
 #### Sub-component 1.1: Data Loading
 
@@ -119,7 +152,6 @@ Calculates difference in FA values between AD and CN groups for each tract, to b
 - `fa_difference`: numpy array (N,) with differences (AD - CN)
   - Negative values = lower FA in AD (worse integrity)
   - Positive values = higher FA in AD (rare)
-- `colormap_config`: *******complete this later**
 
 **Components used:**  
 numpy subtraction
@@ -130,6 +162,28 @@ None - pure computation
 ---
 
 ### Component 2: Tract Coordinate Extraction
+
+**High-level Description:**  
+The Tract Coordinate Extraction component processes the JHU white matter atlas to extract 3D spatial coordinates for each white matter tract in MNI standard space. It uses Principal Component Analysis (PCA) to determine tract directionality and computes start, end, and centroid coordinates for 48 base tracts plus 5 composite regions (53 total). This component runs once as a preprocessing step and outputs a standardized coordinate file used by all visualizations.
+
+**What it does:**
+- Locates JHU atlas NIfTI file in the file system
+- Loads atlas image data and affine transformation matrix
+- Extracts voxel coordinates for each tract ROI
+- Uses PCA to determine tract principal axis and endpoints
+- Converts voxel coordinates to MNI millimeter space
+- Calculates bilateral and composite tract coordinates
+- Exports all coordinates to CSV
+
+**Inputs:**
+- JHU ICBM-DTI-81 atlas NIfTI file (`JHU-ICBM-labels-1mm.nii.gz`)
+- Tract label mappings (hardcoded in BASE_TRACTS dictionary)
+
+**Outputs:**
+- `jhu_coordinates.csv`: 53 tracts × 10 columns (roi, start_xyz, end_xyz, centroid_xyz)
+- Console progress messages during extraction
+
+---
 
 #### Sub-component 2.1: Atlas File Locator
 
@@ -260,6 +314,29 @@ Creates or overwrites file at output_file location. Prints confirmation message:
 
 ### Component 3: Brain Visualization Manager
 
+**High-level Description:**  
+The Brain Visualization Manager component creates interactive 3D visualizations of brain connectivity using Plotly. It loads tract coordinates and DTI metrics, maps them to a node-edge network structure, scales metric values to visual properties (color, size), and renders side-by-side or difference visualizations. This component integrates with the Shiny web interface to provide real-time interactive exploration of connectivity patterns across diagnostic groups.
+
+**What it does:**
+- Loads tract coordinates from Component 2 output
+- Loads DTI metrics from Component 1 output or user uploads
+- Creates node-edge network graph structure
+- Scales FA/MD values to visual properties (color intensity, node size)
+- Renders interactive 3D brain visualizations using Plotly
+- Supports side-by-side comparison and difference mapping
+- Displays visualizations in Shiny web interface
+
+**Inputs:**
+- `jhu_coordinates.csv`: Tract spatial coordinates from Component 2
+- `clean.csv` or user-uploaded CSV: DTI metrics
+- User interaction parameters (camera angle, highlighted tracts, etc.)
+
+**Outputs:**
+- Interactive Plotly Figure object displayed in Shiny app
+- Optional: Exported PNG/HTML files for publication
+
+---
+
 #### Sub-component 3.1: Coordinate File Loader
 
 **Name:** Tract Coordinate Reader
@@ -346,7 +423,7 @@ Scales FA values to color range suitable for visualization.
 
 **Inputs (with type information):**
 - `fa_values`: numpy array (N,) with FA values (typically 0.2-0.6)
-- `color_range`: ******complete this later***
+- `color_range`: *complete this later*
 
 **Outputs (with type information):**
 - `scaled_colors`: numpy array (N,) with FA values clipped to color_range
@@ -415,7 +492,70 @@ Displays three brain views in single figure window.
 ## Interactions
 Example of interactions for 'Upload and Visualize Data' Use Case
 
+**Flow Description:**
+
+When a user uploads custom DTI data to visualize brain connectivity, the three main components interact in the following sequence:
+
+**Step 1 & 2: Data Input and Processing (I/O)**
+
+1. **User action:** Uploads `diagnosis.csv` and `dti.csv` files via Shiny web interface
+2. **Component 1 - Data Preparation** receives the uploaded files:
+   - **Sub-component 1.1 (Data Loader)** reads both CSV files into pandas DataFrames
+   - **Sub-component 1.2 (Data Cleaning)** merges the datasets on participant ID, filters for CN and AD groups, removes missing data, and extracts FA columns
+   - Output: `clean.csv` containing merged and validated data
+   - **Sub-component 1.4 (Summary Statistics Writer)** optionally saves group-level statistics for quick access
+   - Output: `summary_stats.csv`
+
+3. **Component 2 - Tract Coordinate Extraction** (pre-computed):
+   - **Sub-component 2.1 (Atlas Locator)** finds the JHU white matter atlas file
+   - **Sub-component 2.2 & 2.3** extract voxel coordinates and convert to MNI space for all 48 base tracts
+   - **Sub-component 2.4** computes 5 additional composite tract coordinates
+   - **Sub-component 2.5 (Coordinate File Writer)** saves results
+   - Output: `tract_coordinate.csv` (pre-exists, loaded when needed)
+
+**Step 3: Visualization Generation (I/O)**
+
+4. **Component 3 - Brain Visualization Manager** creates the interactive display:
+   - **Sub-component 3.1 (Coordinate Loader)** reads `tract_coordinate.csv` to get spatial positions
+   - **Sub-component 3.2 (DTI Metrics Loader)** reads `clean.csv` to get FA values for the uploaded data
+   - **Sub-component 3.3 (Node-Edge Mapper)** matches tract coordinates with FA values, creating node positions and edge properties
+   - **Sub-component 3.4 (Value Scaler)** maps FA values to color intensities using appropriate color scale
+   - **Sub-component 3.5 (Renderer)** generates Plotly Figure with 3D scatter plot of nodes and connecting edges
+   - Output: Interactive 3D visualization displayed in Shiny app browser window
+
+5. **User interaction:** Views visualization in browser, can rotate, zoom, and interact with the 3D brain model
+
+
+**Data Flow Summary:**
+
+```
+User Uploads
+    ↓
+diagnosis.csv + dti.csv 
+    ↓
+Component 1 (Data Preparation)
+    ├─ 1.1: Load CSVs → DataFrames
+    ├─ 1.2: Clean & Merge → clean.csv
+    └─ 1.4: Summary Stats → summary_stats.csv (optional)
+    ↓
+Component 2 (Tract Coordinates) - Pre-computed
+    └─ 2.5: Provides → tract_coordinate.csv
+    ↓
+Component 3 (Brain Visualization)
+    ├─ 3.1: Load coordinates
+    ├─ 3.2: Load clean.csv metrics  
+    ├─ 3.3: Create node-edge network
+    ├─ 3.4: Scale FA → colors
+    └─ 3.5: Render → Plotly Figure
+    ↓
+Shiny App Display (Interactive 3D brain)
+```
+
+**Visual Diagram:**
+
 ![Diagram showing interactions for upload and visualize data use case](../images/nc_interactions.png)
+
+---
 
 ## Preliminary Plan
 
@@ -428,3 +568,83 @@ Example of interactions for 'Upload and Visualize Data' Use Case
 3b. Tests for Components for User Data and Export Data
 
 4. Connect Different Components
+
+### Phase 1: Core Component Development
+
+**1. Component 1: Data Preparation** **(COMPLETE)**
+   - 2a. Implement CSV data loader (Sub-component 1.1)
+   - 2b. Implement data merger and filter (Sub-component 1.2)
+   - 2c. Implement summary statistics calculator (Sub-component 1.3)
+   - 2d. Implement group difference calculator (Sub-component 1.5)
+   - 2e. Implement summary data output writer (Sub-component 1.4)
+   - 2f. Write unit tests for each sub-component
+   - 2g. Integration test: Validate clean.csv and summary_stats.csv outputs
+
+**2. Component 2: Tract Coordinate Extraction** **(COMPLETE)**
+   - 1a. Implement atlas file locator (Sub-component 2.1)
+   - 1b. Implement PCA-based coordinate extractor (Sub-component 2.2)
+   - 1c. Implement batch tract loop (Sub-component 2.3)
+   - 1d. Implement additional tract calculator (Sub-component 2.4)
+   - 1e. Implement CSV exporter (Sub-component 2.5)
+   - 1f. Write comprehensive unit tests 
+   - 1g. Validate output: `jhu_coordinates.csv` with 53 tracts
+
+
+**3. Component 3: Brain Visualization Manager** **(IN PROGRESS)**
+   - 3a. Implement coordinate file loader (Sub-component 3.1)
+   - 3b. Implement DTI metrics loader (Sub-component 3.2)
+   - 3c. Implement node-edge mapper (Sub-component 3.3)
+   - 3d. Implement edge value scaler (Sub-component 3.4)
+   - 3e. Implement basic Plotly renderer (Sub-component 3.5)
+   - 3f. Implement comparison overlay visualizer (Sub-component 3.6)
+   - 3g. Write unit tests for visualization logic
+   - 3h. Integration test: Verify end-to-end visualization pipeline
+
+### Phase 2: Integration & User Interface
+
+**4. Shiny Application Development** 🚧 **(IN PROGRESS)**
+   - 4a. Design UI layout with file upload, controls, and visualization panels
+   - 4b. Implement reactive data loading and validation
+   - 4c. Connect Component 1 to file upload interface
+   - 4d. Connect Component 3 to visualization output
+   - 4e. Implement side-by-side and difference view modes
+   - 4f. Add interactive controls (camera, highlighting, AOI selection)
+   - 4g. Implement demo data loading functionality
+   - 4h. Test user workflows for all use cases
+
+**5. Testing & Quality Assurance**
+   - 5a. End-to-end integration testing (all components working together)
+   - 5b. User acceptance testing with target audience members
+   - 5c. Performance testing with large datasets
+   - 5d. Cross-browser compatibility testing
+   - 5e. Code coverage analysis and gap filling
+   - 5f. Code quality checks (pylint, formatting standards)
+
+### Phase 3: Documentation & Deployment
+
+**6. Documentation**
+   - 6a. API documentation for all functions
+   - 6b. User guide with examples and screenshots
+   - 6c. README with installation and quick start
+   - 6d. Example notebooks demonstrating common workflows
+
+**7. Deployment & Distribution**
+   - 7a. Package configuration (pyproject.toml)
+   - 7b. Continuous integration setup (GitHub Actions)
+   - 7c. Release preparation and version tagging
+   - 7d. Publication of demo application
+
+### Phase 4: Future Enhancements (Optional)
+
+**8. Advanced Features** 📋 **(PLANNED)**
+   - 8a. Additional DTI metrics support (MD, RD, AD)
+   - 8b. Statistical comparison overlays
+   - 8c. Batch processing for multiple subjects
+   - 8d. Quality control visualization module
+   - 8e. Export functionality enhancements (high-res images, videos)
+
+---
+
+**Current Status:** Phase 1 (Component 1 & 2 complete, Components 3 in development) & Phase 2 (Shiny app in active development)
+
+**Next Priority:** Finalize Component 3 integration with Shiny app
