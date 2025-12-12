@@ -293,6 +293,29 @@ def build_edges_distance(df: pd.DataFrame, max_dist: float = 25.0, max_edges: in
                 return edges
     return edges
 
+def build_edges_group(df: pd.DataFrame, max_edges: int = 10000):
+    """
+    Build edges by fully connecting nodes within each group (group-wise clique),
+    capped by max_edges to avoid explosion on large datasets.
+    Returns a list of (i, j) index pairs.
+    """
+    if "group" not in df.columns:
+        return []
+
+    edges = []
+    # groupby preserves index; we'll use original row indices as node ids
+    for g, sub in df.groupby("group", sort=False):
+        idxs = list(sub.index)
+        m = len(idxs)
+        # fully connect all pairs within this group
+        for a in range(m):
+            for b in range(a + 1, m):
+                edges.append((idxs[a], idxs[b]))
+                if len(edges) >= max_edges:
+                    return edges
+    return edges
+
+
 def edges_to_plotly_lines(df: pd.DataFrame, edges: list):
     xs, ys, zs = [], [], []
     for i, j in edges:
@@ -342,7 +365,7 @@ app_ui = ui.page_sidebar(
         ui.h4("Nodes & Edges"),
         ui.input_slider("node_size","Base node size",2,12,6),
         ui.input_slider("node_alpha","Node opacity",1,10,9),
-        ui.input_select("edge_mode","Edges mode",["off","kNN","distance"],selected="off"),
+        ui.input_select("edge_mode","Edges mode",["off","kNN","distance", "group-by-group"],selected="off"),
         ui.input_numeric("edge_k","k for kNN",4),
         ui.input_numeric("edge_maxdist","Max dist (mm) for distance",25.0),
         ui.input_slider("edge_width","Edge width",1,8,2),
@@ -439,31 +462,28 @@ def server(input, output, session):
 
     @reactive.Calc
     def df_A():
-        if use_tract_data.get() and tract_data_cache.get() is not None:
-            data = tract_data_cache.get()
-            if 'CN' in data:
-                return prepare_nodes(data['CN'])
-        if input.csvA() and not demoA.get() and not use_tract_data.get():
-            file = input.csvA()[0]
-            raw = pd.read_csv(io.BytesIO(file.read()))
+        if input.csvA() and not demoA.get():
+            fileinfo = input.csvA()[0]          # dict-like object
+            raw = pd.read_csv(fileinfo["datapath"])
             return prepare_nodes(raw)
         base = generate_demo_nodes(seed=2025, with_values=True)
         return prepare_nodes(base)
 
+
     @reactive.Calc
     def df_B():
-        if use_tract_data.get() and tract_data_cache.get() is not None:
-            data = tract_data_cache.get()
-            if 'AD' in data:
-                return prepare_nodes(data['AD'])
-        if input.csvB() and not demoB.get() and not use_tract_data.get():
-            file = input.csvB()[0]
-            raw = pd.read_csv(io.BytesIO(file.read()))
+        if input.csvB() and not demoB.get():
+            fileinfo = input.csvB()[0]
+            raw = pd.read_csv(fileinfo["datapath"])
             return prepare_nodes(raw)
         base = generate_demo_nodes(seed=2026, with_values=True)
         if "value" in base.columns:
-            base["value"] = np.clip(base["value"] + 0.15*np.sin(np.linspace(0, 4*np.pi, len(base))), 0, 1)
+            base["value"] = np.clip(
+                base["value"] + 0.15*np.sin(np.linspace(0, 4*np.pi, len(base))),
+                0, 1
+            )
         return prepare_nodes(base)
+
 
     def build_surface_traces():
         mode = input.surface_mode()
@@ -490,24 +510,33 @@ def server(input, output, session):
     def add_edges_if_needed(traces, df):
         if input.edge_mode() == "off" or len(df) < 2:
             return
-        if input.edge_mode() == "kNN":
+        mode = input.edge_mode()
+        if mode == "kNN":
             edges = build_edges_knn(
-                df, 
-                k=int(input.edge_k()), 
+                df,
+                k=int(input.edge_k()),
+                max_edges=int(input.edge_max())
+            )
+        elif mode == "distance":
+            edges = build_edges_distance(
+                df,
+                max_dist=float(input.edge_maxdist()),
+                max_edges=int(input.edge_max())
+            )
+        elif mode == "group-by-group":
+            edges = build_edges_group(
+                df,
                 max_edges=int(input.edge_max())
             )
         else:
-            edges = build_edges_distance(
-                df, 
-                max_dist=float(input.edge_maxdist()), 
-                max_edges=int(input.edge_max())
-            )
+            edges = []
+
         if edges:
             xs, ys, zs = edges_to_plotly_lines(df, edges)
             traces.append(go.Scatter3d(
                 x=xs, y=ys, z=zs, mode="lines",
                 line=dict(width=int(input.edge_width())),
-                opacity=float(input.edge_alpha())/10.0,
+                opacity=float(input.edge_alpha()) / 10.0,
                 name=f"Edges ({len(edges)})",
                 hoverinfo="skip"
             ))
@@ -569,7 +598,8 @@ def server(input, output, session):
         fig.update_layout(
             title=f"{tag} — {surf_label}", 
             scene=dict(aspectmode="data"), 
-            legend=dict(itemsizing="constant")
+            #add legend below the plot area at the bottom center
+            legend=dict(y=-0.1, x=0.5, xanchor='center', yanchor='top', orientation='h')
         )
         return fig
 
