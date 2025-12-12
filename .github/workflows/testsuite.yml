@@ -40,6 +40,14 @@ jobs:
           if [[ $PYVER != ${{ env.PYTHON }} ]]; then
             exit 1;
           fi
+  
+      - name: Clean Python cache
+        run: |
+          find . -type d -name "__pycache__" -exec rm -rf {} + || true
+          find . -type f -name "*.pyc" -delete || true
+  
+      - name: Lint with Ruff
+        run : ruff check
 
       - name: Install
         run: pip install --no-deps .
@@ -48,5 +56,3 @@ jobs:
         run: |
           python -m pytest --cov=neuroconnect --cov-report=term-missing
 
-      - name: Lint with Ruff
-        run : ruff check
