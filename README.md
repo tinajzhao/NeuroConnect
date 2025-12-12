@@ -203,6 +203,8 @@ Once the app is open (web or local):
 - Ensure data matches the [required format](#input-data-format)
 - Click **"Render / Update"**
 
+See the [Examples](#examples) section for Python scripts using the neuroconnect package to **prepare data**.
+
 ---
 
 ## Data
@@ -259,6 +261,8 @@ Choose the option that best fits your needs:
 - **Without FSL:** Download from [NeuroVault](https://neurovault.org/images/1401/) → place in `data/`
 
 **Pre-extracted coordinates** are already included in the repository at `data/jhu_coordinates.csv` 
+
+**Process ADNI data using data_prep.py:** See [`examples/custom_data_upload.py`](#example-2-custom-data-upload-custom_data_uploadpy) for a complete pipeline using `load_data()`, `clean_data()`, and `compute_summary_statistics()`.
 
 #### Option 3: Custom DTI Data with JHU Atlas
 
@@ -341,7 +345,7 @@ This workflow highlights how our tool operates from users uploading data to the 
 
 ## Examples
 
-The `examples/` folder contains practical scripts demonstrating common workflows with NeuroConnect.
+The `examples/` folder contains practical scripts demonstrating common workflows with NeuroConnect. 
 
 ### Example 1: Basic Visualization (`basic_visualization.py`)
 
@@ -349,7 +353,8 @@ The `examples/` folder contains practical scripts demonstrating common workflows
 
 Demonstrates how to:
 - Load pre-extracted JHU tract coordinates
-- Generate synthetic DTI data for CN and AD groups
+- Generate subject-level DTI data (ADNI format)
+- Use `compute_summary_statistics()` to calculate group means
 - Merge coordinates with metrics
 - Create visualization-ready CSV files
 
@@ -360,20 +365,23 @@ python examples/basic_visualization.py
 
 **Output:** `demo_visualization_data.csv` ready for upload to NeuroConnect
 
+**Key function used:** `compute_summary_statistics()` from `neuroconnect.data_prep`
+
 ---
 
 ### Example 2: Custom Data Upload (`custom_data_upload.py`)
 
-**Perfect for:** Researchers with their own DTI data
+**Perfect for:** Researchers with their own DTI data in ADNI format
 
-Demonstrates how to:
-- Load subject-level DTI data
-- Calculate group-level summary statistics
-- Match tract names with JHU coordinates
-- Validate data format
-- Prepare final visualization files
+Demonstrates the **complete data processing pipeline**:
+- Simulate ADNI-format files (diagnosis.csv + DTI.csv)
+- Use `load_data()` to load diagnosis and DTI data
+- Use `clean_data()` to merge and filter subjects
+- Use `compute_summary_statistics()` to calculate group means
+- Merge with JHU coordinates
+- Validate and prepare final visualization files
 
-**To do:** Modify the `simulate_custom_dti_data()` function to load your actual data.
+**To use YOUR data:** Replace the `simulate_adni_data()` call with your actual ADNI folder path.
 
 **Run it:**
 ```bash
@@ -381,6 +389,8 @@ python examples/custom_data_upload.py
 ```
 
 **Output:** `custom_neuroconnect_data.csv` ready for upload to NeuroConnect
+
+**Key functions used:** `load_data()`, `clean_data()`, `compute_summary_statistics()` from `neuroconnect.data_prep`
 
 ---
 
