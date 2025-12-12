@@ -7,7 +7,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import pytest
 
-import src.neuroconnect.app_shiny_neuroconnect as app
+import src.neuroconnect.visualization_manager as app
 
 
 # Unit tests (edge cases)
