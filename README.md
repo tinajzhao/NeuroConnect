@@ -472,7 +472,7 @@ start htmlcov/index.html  # Windows
 
 | Team Member | Department | Role | Key Contributions |
 |-------------|------|---------------|----------------|
-| **Tina Zhao** | Psychology | Project Lead & Developer | Project architecture, use case/component specifications, tract coordinate extraction implementation, unit tests, documentation, CI configuration | 
+| **Tina Zhao** | Psychology | Project Lead & Developer | Project architecture, use case/component specifications, tract coordinate extraction implementation, unit tests, creating examples, documentation, CI configuration | 
 | **Carlos Pineda** | Pharmacy | Developer | Shiny UI design, node comparison engine, unit test for visualization |
 | **Hongyu Mu** | Statistics | Developer | Revise shiny code using real data, writing tests for data loading and summary statistics |
 | **Kenny Yi** | Biomedical Informatics and Medical Education | Developer | Revise language to be user-friendly, documentation, logo, diagrams, unit tests for group difference calculator |
