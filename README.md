@@ -463,7 +463,7 @@ start htmlcov/index.html  # Windows
 **GitHub Actions:** Automated testing on push/PR
 - ✅ **macOS-latest** (Python 3.11, 3.12)
 - ✅ **Windows-latest** (Python 3.11, 3.12)
-- ⚠️ **Ubuntu excluded:** Shiny for Python has known compatibility issues with Ubuntu in CI environments. Local Ubuntu testing has been performed manually.
+- ✅ **Ubuntu-latest:** (Python 3.11, 3.12)
 
 ---
 
