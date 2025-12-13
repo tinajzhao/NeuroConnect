@@ -1,3 +1,5 @@
+![](https://github.com/tinajzhao/NeuroConnect/actions/workflows/testsuite.yaml/badge.svg?branch=main)
+
 ![NeuroConnect Logo](images/nc_logo.png)
 
 # NeuroConnect  
