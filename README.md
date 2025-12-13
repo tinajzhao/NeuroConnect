@@ -1,4 +1,4 @@
-![](https://github.com/tinajzhao/NeuroConnect/actions/workflows/testsuite.yaml/badge.svg?branch=main)
+[![Tests](https://github.com/tinajzhao/NeuroConnect/actions/workflows/testsuite.yml/badge.svg)](https://github.com/tinajzhao/NeuroConnect/actions/workflows/testsuite.yml)
 
 ![NeuroConnect Logo](images/nc_logo.png)
 
